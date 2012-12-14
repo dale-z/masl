@@ -5,5 +5,3 @@ let main () =
 			Parser.program Scanner.token_parser lexbuf;;
 
 print_program (main ());;
-
-(*daaa*)
