@@ -1,46 +1,93 @@
+(*Semantic Check*)
 open Ast;;
+module NameMap = Map.Make(struct
+	type t = string
+	let compare x y = Pervasives.compare x y 
+end)
 
-(* Environment: symbol tables, jump tables, etc. *)
+(*check program*)
 
-type s_type_spec =
-	  ValidType of type_spec
-	| InvalidType;;
+let rec check_semantic program =	 
+	match program with
+	| Program(stmt_list) -> List.fold_left (check_stmt) NameMap.empty stmt_list
 
-type s_expr = expr * s_type_spec;;
+(*check statements*)
 
-type s_var_decl = {
-	id: string;
-	t: type_spec;
-};;
+and check_stmt v_table stmt = 
+	match stmt with (*match all types of statements*)
+	| BasicDecl(type_spec, basic_init_decl) -> 
+		let rec check_basic_init_decl v_table list =
+			match list with
+			| [] -> v_table
+			| head::tail -> 
+  			match head with
+  			| BasicInitDefault(id) -> check_basic_init_decl (NameMap.add id type_spec v_table) tail	 
+  			| BasicInitAssign(id, expr) ->
+  				if(check_expr v_table type_spec expr) then
+  					check_basic_init_decl 
+						(
+							if NameMap.mem id v_table then
+								v_table
+							else
+								NameMap.add id type_spec v_table
+						) 
+						tail
+  				else
+  					raise (Failure("Basic Assignment Check Fails\n"))
+		in check_basic_init_decl v_table basic_init_decl				 
+	| _ -> raise (Failure("Basic Declaration Fails\n"))
 
-type s_symbol_table = {
-	parent: symbol_table option;
-	var_decls: var_decl list;
-};;
+(*check expression*)
 
-type s_translate_env = {
-	scope: symbol_table;
-	cur_func: type_spec option;
-	value_returned: bool;
-	in_object: bool;
-	in_loop: bool;
-};;
-
-let rec s_get_var_decl id sym_t =
-	try
-		let vd = List.find (fun vd -> vd.id = id) sym_t.var_decls
-		in vd.type_spec
-	with Not_found -> InvalidType;;
-
-let rec s_get_type expr = match expr with
-    Id(id) -> InvalidType (* Look up symbol table and check it out. *)
-	| BasicLit(basic_type, _) -> ValidType(basic_type)
-	| FuncLit(lit) -> InvalidType (* Parse it. *)
-	| ObjectLit -> ValidType(Object)
-	| This -> ValidType(Object)
-	| UnaryOp -> InvalidType (* Go down to parse it. *)
-	| BinaryOp -> InvalidType (* Go down to parse it. *)
-	| FuncCall -> InvalidType (* Find the function *)
-	| NoExpr -> Void;;
-
-(* sjdflksdjfl *)
+and check_expr v_table type_spec expr = 
+	match expr with (*match all types of expressions*)
+	| Id(id) -> 
+		if NameMap.mem id v_table then
+			match (type_spec) with
+			| Int -> ((NameMap.find id v_table) = Int) || ((NameMap.find id v_table) = Char)
+			| Double -> ((NameMap.find id v_table) = Int) || ((NameMap.find id v_table) = Char) || ((NameMap.find id v_table) = Double)
+			| els -> (NameMap.find id v_table) = els
+		else
+			raise (Failure("Cannot Find Identifier.\n"))
+	| BasicLit(basic_literal) ->
+		(
+		match basic_literal with
+		| IntLit(t) -> (type_spec = Int) || (type_spec = Double)
+		| DoubleLit(t) -> type_spec = Double
+		| CharLit(t) ->  (type_spec = Int) || (type_spec = Char) || (type_spec = Double)
+		| BoolLit(t) -> type_spec = Bool
+		)
+	| FuncLit(func_literal) -> false (*to be continued*)
+	| ObjectLit(object_literal) -> false (*to be continued*)
+	| This -> false (*to be continued*)
+	| UnaryOp(op, expr) ->
+		( 
+		match op with
+		| Plus -> check_expr v_table Double expr
+		| Minus -> check_expr v_table Double expr
+		| Not -> check_expr v_table Bool expr
+		)
+	| BinaryOp(e1, op, e2) ->
+		( 
+		match op with
+		| Plus -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Minus -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Mult -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Div -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Mod -> (check_expr v_table Int e1) && (check_expr v_table Int e2)
+		| And -> (check_expr v_table Bool e1) && (check_expr v_table Bool e2)
+		| Or -> (check_expr v_table Bool e1) && (check_expr v_table Bool e2)
+		| Gt -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Ge -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Eq -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Neq -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Le -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Lt -> (check_expr v_table Double e1) && (check_expr v_table Double e2)
+		| Assign -> false (*too complicated*)
+		| Trans -> false (*?????*)
+		| At -> false (*???*)
+		| Dot -> false (*?????*)
+		)
+	| FuncCall -> false
+	| NoExpr -> true;
+;;
