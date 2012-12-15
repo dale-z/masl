@@ -1,7 +1,9 @@
 COMMON_OBJS =\
 	scanner.cmo\
 	parser.cmo\
-	ast.cmo
+	ast.cmo\
+	astutils.cmo\
+	translate.cmo
 
 MASL_OBJS =\
 	$(COMMON_OBJS)\
@@ -9,7 +11,6 @@ MASL_OBJS =\
 
 PRINTAST_OBJS =\
 	$(COMMON_OBJS)\
-	printast.cmo
 
 CLEAN_OBJS =\
 	scanner.ml\
@@ -19,17 +20,13 @@ CLEAN_OBJS =\
 	*.cmo\
 	*.cmi\
 	*.cmx\
-	printast\
 	masl
 
 .PHONY: all
-all: masl printast
+all: masl
 
 masl : $(MASL_OBJS)
 	ocamlc -o $@ $(MASL_OBJS)
-
-printast : $(PRINTAST_OBJS)
-	ocamlc -o $@ $(PRINTAST_OBJS)
 
 scanner.ml: scanner.mll
 	ocamllex scanner.mll
@@ -43,11 +40,14 @@ parser.ml parser.mli: parser.mly
 %.cmi: %.mli
 	ocamlc -c $<
 
-ast.cmi ast.cmo: ast.ml
+ast.cmi: ast.ml
 	ocamlc -c ast.ml
 
-printast.cmo printast.cmi: printast.ml
+astutils.cmi: printast.ml
 	ocamlc -c printast.ml
+
+translate.cmi: translate.ml
+	ocamlc -c translate.ml
 
 toplevel.cmo toplevel.cmi: toplevel.ml
 	ocamlc -c toplevel.ml
@@ -57,8 +57,9 @@ clean:
 	rm -rf $(CLEAN_OBJS)
 
 scanner.cmo: parser.cmi
-scanner.cmx: parser.cmx
 
 parser.mli: ast.cmi
 parser.cmo: parser.cmi ast.cmi
-parser.cmx: parser.cmi ast.cmi
+
+astutils.cmo: ast.cmi
+translate.cmo: ast.cmi
