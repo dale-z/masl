@@ -62,6 +62,7 @@ and token_parser = parse
 	| "double"	{  DOUBLE }
 	| "char"	{ CHAR }
 	| "bool"	{ BOOL }
+	| "class"	{ CLASS }
 	| "object"	{ OBJECT }
 	| "fun" { FUN }
 	| "void"	{ VOID }

@@ -14,7 +14,7 @@
 
 /* Keywords. */
 /* Type specifiers. */
-%token INT DOUBLE CHAR BOOL OBJECT FUN VOID
+%token INT DOUBLE CHAR BOOL CLASS OBJECT FUN VOID
 /* Control flow. */
 %token IF ELSE FOR WHILE DO CONTINUE BREAK RETURN
 /* Object definitions. */
@@ -84,6 +84,7 @@ stmt:
 		/* Declaration statement. */
 	| basic_type_decl SEMICOLON { $1 }
 	| func_decl { $1 }
+	| class_decl { $1 }
 	| object_decl SEMICOLON { $1 }
 	  /* Expression statement. */
 	| expr SEMICOLON { Expr($1) }
@@ -113,7 +114,7 @@ type_specifier:
 	| CHAR { Char }
 	| BOOL { Bool }
 	| LPAREN param_type_list RPAREN COLON type_specifier { FuncType($5, List.rev $2) }
-	| OBJECT { Object }
+	| OBJECT ID { Class($2) }
 	
 	/* TODO List type specifier. */
 
@@ -126,8 +127,8 @@ basic_init_decl:
 	| ID ASSIGN expr { BasicInitAssign($1, $3) }
 
 func_decl:
-	  FUN ID ASSIGN func_literal SEMICOLON { FuncDecl($2, $4) }
-	| type_specifier ID LPAREN param_list RPAREN comp_stmt { FuncDecl($2, ($1, List.rev $4, $6)) }
+	  FUN ID ASSIGN expr { FuncDecl($2, $4) }
+	| type_specifier ID LPAREN param_list RPAREN comp_stmt { FuncDecl($2, FuncLit($1, List.rev $4, $6)) }
 
 param_list:
 	  /* Empty. */ { [] }
@@ -152,13 +153,14 @@ nonempty_unnamed_param_type_list:
 func_literal:
 	  FUN LPAREN param_list RPAREN COLON type_specifier comp_stmt { ($6, $3, $7) }
 
-/* TODO Continue from here. */
+class_decl:
+	  CLASS ID LBRACE state_decl_list stmt_list RBRACE { ClassDecl($2, $4, $5) }
+
 object_decl:
-	  type_specifier ID ASSIGN object_literal { ObjectDecl($2, $4) }
+	  OBJECT ID ASSIGN expr { ObjectDecl($2, $4) }
 
 object_literal:
-	  COLON ID LBRACE state_decl_list stmt_list RBRACE { ($2, $4, $5) }
-	| COLON LBRACE state_decl_list stmt_list RBRACE { ("", $3, $4) }
+	  type_specifier LBRACE stmt_list RBRACE { ($1, $3) }
 
 state_decl_list:
 	  /* Empty. */ { [] }
@@ -195,7 +197,7 @@ expr:
 	  ID { Id($1) }
 	| basic_literal { BasicLit($1) }
 	| func_literal { FuncLit($1) }
-	| OBJECT object_literal { ObjectLit($2) }
+	| object_literal { ObjectLit($1) }
 	| THIS { This }
 	| LPAREN expr RPAREN { $2 }
 	| expr LPAREN arg_list RPAREN { FuncCall($1, List.rev $3) }
