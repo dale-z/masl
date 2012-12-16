@@ -19,7 +19,10 @@ and print_type_spec indent node = match node with
 				(print_type_spec ("  " ^ indent)) param_types;
 		print_string (indent ^ "}\n")
 	| Class(id) -> print_string (indent ^ "Class { " ^ id ^ " }\n")
-	| Object -> print_string (indent ^ "Object\n")
+	| ListType(elem_type) ->
+		print_string (indent ^ "ListType {\n");
+		print_type_spec ("  " ^ indent) elem_type;
+		print_string (indent ^ "}\n")
 	| Void -> print_string (indent ^ "Void\n")
 and print_stmt indent node = match node with
   | BasicDecl(type_spec, decl_list) ->
@@ -37,11 +40,6 @@ and print_stmt indent node = match node with
 		print_string ("  " ^ indent ^ "_Id { " ^ id ^ " }\n");
 		List.iter (print_state ("  " ^ indent)) states;
 		List.iter (print_stmt ("  " ^ indent)) stmts;
-		print_string (indent ^ "}\n")
-  | ObjectDecl(id, expr) ->
-		print_string (indent ^ "ObjectDecl {\n");
-		print_string ("  " ^ indent ^ " _Id { " ^ id ^ " }\n");
-		print_expr ("  " ^ indent) expr;
 		print_string (indent ^ "}\n")
   | Expr(expr) ->
 		print_string (indent ^ "Expr {\n");
@@ -95,19 +93,27 @@ and print_expr indent node = match node with
 		begin
   		match lit with
   		| IntLit(lit) ->
-				print_string ("  " ^ indent ^ "IntLit {" ^ (string_of_int lit) ^ "}\n")
-  		| DoubleLit(lit) -> print_string ("  " ^ indent ^ "DoubleLit {" ^ (string_of_float lit) ^ "}\n")
-  		| CharLit(lit) -> print_string ("  " ^ indent ^ "CharLit {" ^ (Char.escaped lit) ^ "}\n")
-  		| BoolLit(lit) -> print_string ("  " ^ indent ^ "BoolLit {" ^ (string_of_bool lit) ^ "}\n")
+				print_string ("  " ^ indent ^ "IntLit { " ^ (string_of_int lit) ^ " }\n")
+  		| DoubleLit(lit) -> print_string ("  " ^ indent ^ "DoubleLit { " ^ (string_of_float lit) ^ " }\n")
+  		| CharLit(lit) -> print_string ("  " ^ indent ^ "CharLit { " ^ (Char.escaped lit) ^ " }\n")
+  		| BoolLit(lit) -> print_string ("  " ^ indent ^ "BoolLit { " ^ (string_of_bool lit) ^ " }\n")
+			| ObjectLit(lit) ->
+				print_string ("  " ^ indent ^ "ObjectLit {\n");
+    		print_object_lit ("    " ^ indent) lit;
+    		print_string ("  " ^ indent ^ "}\n")
+			| ListLit(elem_type, elems) ->
+				print_string ("  " ^ indent ^ "ListLit {\n");
+				print_string ("    " ^ indent ^ "_ElemType {\n");
+      	print_type_spec ("      " ^ indent) elem_type;
+				print_string ("    " ^ indent ^ "}\n");
+      	List.iter
+					(print_expr ("    " ^ indent)) elems;
+				print_string ("  " ^ indent ^ "}\n")
 		end;
 		print_string (indent ^ "}\n");
 	| FuncLit(lit) ->
 		print_string (indent ^ "FuncLit {\n");
 		print_func_lit ("  " ^ indent) lit;
-		print_string (indent ^ "}\n")
-	| ObjectLit(lit) ->
-		print_string (indent ^ "ObjectLit {\n");
-		print_object_lit ("  " ^ indent) lit;
 		print_string (indent ^ "}\n")
 	| This -> print_string (indent ^ "This\n")
 	| UnaryOp(op, expr) ->
@@ -158,7 +164,7 @@ and print_basic_init_decl indent node = match node with
 		print_string (indent ^ "}\n")
   | BasicInitAssign(id, expr) ->
 		print_string (indent ^ "BasicInitAssign {\n");
-		print_string ("  " ^ indent ^ " _Id { " ^ id ^ "}\n");
+		print_string ("  " ^ indent ^ "_Id { " ^ id ^ " }\n");
 		print_expr ("  " ^ indent) expr;
 		print_string (indent ^ "}\n")
 and print_func_lit indent node = match node with
@@ -183,8 +189,6 @@ and print_state indent node =
   		print_stmt ("  " ^ indent) body
 	end;
 	print_string (indent ^ "}\n")
-and print_object_lit indent node = match node with
-	| (class_id, stmts) ->
+and print_object_lit indent class_id = 
 		print_type_spec ("  " ^ indent) class_id;
-		List.iter (print_stmt ("  " ^ indent)) stmts;
 ;;

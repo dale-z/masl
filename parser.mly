@@ -57,7 +57,8 @@
 %left DOT
 %left AT TRANS
 %left LPAREN RPAREN
-%nonassoc COLON
+%left COLON
+%left LSQBRA RSQBRA
 
 %start program
 %type <Ast.program> program
@@ -65,8 +66,6 @@
 %%
 
 /* Rule section. */
-
-/* TODO Lists and strings. */
 
 program:
 	  stmt_list { Program($1) }
@@ -85,7 +84,6 @@ stmt:
 	| basic_type_decl SEMICOLON { $1 }
 	| func_decl { $1 }
 	| class_decl { $1 }
-	| object_decl SEMICOLON { $1 }
 	  /* Expression statement. */
 	| expr SEMICOLON { Expr($1) }
 	  /* Compound statement. */
@@ -93,17 +91,14 @@ stmt:
 	  /* Control flow statement. */
 	| IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, NoStmt) }
 	| IF LPAREN expr RPAREN stmt ELSE stmt { If($3, $5, $7) }
-	| FOR LPAREN stmt SEMICOLON expr SEMICOLON expr RPAREN stmt { For($3, $5, $7, $9) }
+	| FOR LPAREN stmt expr_opt SEMICOLON expr_opt RPAREN stmt { For($3, $4, $6, $8) }
 	| FOR LPAREN type_specifier ID COLON expr RPAREN stmt { ForEach($3, $4, $6, $8) }
 	| WHILE LPAREN expr RPAREN stmt { While($3, $5) }
 	| DO comp_stmt WHILE LPAREN expr RPAREN { DoWhile($2, $5) }
 	  /* Jump statement. */
 	| CONTINUE SEMICOLON { Continue }
 	| BREAK SEMICOLON { Break }
-	| RETURN SEMICOLON { Return(NoExpr) }
-	| RETURN expr SEMICOLON { Return($2) }
-
-	/* TODO List declaration. */
+	| RETURN expr_opt SEMICOLON { Return($2) }
 
 basic_type_decl:
 	  type_specifier basic_init_decl_list { BasicDecl($1, List.rev $2) }
@@ -113,10 +108,9 @@ type_specifier:
 	| DOUBLE { Double }
 	| CHAR { Char }
 	| BOOL { Bool }
-	| LPAREN param_type_list RPAREN COLON type_specifier { FuncType($5, List.rev $2) }
-	| OBJECT ID { Class($2) }
-	
-	/* TODO List type specifier. */
+	| LPAREN param_type_list RPAREN COLON type_specifier { FuncType($5, $2) }
+	| CLASS ID { Class($2) }
+	| LSQBRA type_specifier RSQBRA { ListType($2) }
 
 basic_init_decl_list:
 	  basic_init_decl { [$1] }
@@ -128,11 +122,11 @@ basic_init_decl:
 
 func_decl:
 	  FUN ID ASSIGN expr { FuncDecl($2, $4) }
-	| type_specifier ID LPAREN param_list RPAREN comp_stmt { FuncDecl($2, FuncLit($1, List.rev $4, $6)) }
+	| type_specifier ID LPAREN param_list RPAREN comp_stmt { FuncDecl($2, FuncLit($1, $4, $6)) }
 
 param_list:
 	  /* Empty. */ { [] }
-	| nonempty_param_list { $1 }
+	| nonempty_param_list { List.rev $1 }
 
 nonempty_param_list:
 	  param { [$1] }
@@ -143,8 +137,8 @@ param:
 
 param_type_list:
 	  /* Empty. */ { [] }
-	| nonempty_param_list { List.map fst $1 (* TODO Get the type out of the list. *) }
-	| nonempty_unnamed_param_type_list { $1 }
+	| nonempty_param_list { List.rev (List.map fst $1) }
+	| nonempty_unnamed_param_type_list { List.rev $1 }
 
 nonempty_unnamed_param_type_list:
 	  type_specifier { [$1] }
@@ -154,13 +148,22 @@ func_literal:
 	  FUN LPAREN param_list RPAREN COLON type_specifier comp_stmt { ($6, $3, $7) }
 
 class_decl:
-	  CLASS ID LBRACE state_decl_list stmt_list RBRACE { ClassDecl($2, $4, $5) }
-
-object_decl:
-	  OBJECT ID ASSIGN expr { ObjectDecl($2, $4) }
+	  CLASS ID LBRACE state_decl_list stmt_list RBRACE { ClassDecl($2, List.rev $4, $5) }
 
 object_literal:
-	  type_specifier LBRACE stmt_list RBRACE { ($1, $3) }
+	  type_specifier LPAREN RPAREN { ObjectLit($1) }
+
+list_literal:
+	  LSQBRA type_specifier RSQBRA LBRACE list_elems RBRACE { ListLit($2, $5) }
+	| STRING_LITERAL { ListLit(Char, List.map (fun c -> BasicLit(CharLit(c))) $1) }
+
+list_elems:
+	  /* Empty */ { [] }
+	| nonempty_list_elems { List.rev $1 }
+
+nonempty_list_elems:
+	  expr { [$1] }
+	| nonempty_list_elems COMMA expr { $3 :: $1 }
 
 state_decl_list:
 	  /* Empty. */ { [] }
@@ -174,33 +177,16 @@ basic_literal:
 	| DOUBLE_LITERAL { DoubleLit($1) }
 	| CHAR_LITERAL { CharLit($1) }
 	| BOOL_LITERAL { BoolLit($1) }
-/*	| STRING_LITERAL {  } 
-	| LSQBRA list_elems RSQBRA {}
-*/
-	/* TODO List literal and string literal. */
-
-/*
-
-list_elems:
-	  / * Empty * / {}
-	| nonempty_list_elems {}
-
-nonempty_list_elems:
-	  expr {}
-	| nonempty_list_elems COMMA expr {}
-
-*/
-
-/* TODO Assignment expression and left value structure handling. */
+	| object_literal { $1 }
+	| list_literal { $1 }
 
 expr:
-	  ID { Id($1) }
+	| ID { Id($1) }
 	| basic_literal { BasicLit($1) }
 	| func_literal { FuncLit($1) }
-	| object_literal { ObjectLit($1) }
 	| THIS { This }
 	| LPAREN expr RPAREN { $2 }
-	| expr LPAREN arg_list RPAREN { FuncCall($1, List.rev $3) }
+	| expr LPAREN arg_list RPAREN { FuncCall($1, $3) }
 	| PLUS expr %prec UPLUS { UnaryOp(Plus, $2) }
 	| MINUS expr %prec UMINUS { UnaryOp(Minus, $2) }
 	| expr MULT expr { BinaryOp($1, Mult, $3) }
@@ -221,6 +207,11 @@ expr:
 	| expr AT expr { BinaryOp($1, At, $3) }
 	| expr TRANS expr { BinaryOp($1, Trans, $3) }
 	| expr ASSIGN expr {BinaryOp($1, Assign, $3) }
+	| expr COLON LSQBRA expr RSQBRA { BinaryOp($1, Index, $4) }
+
+expr_opt:
+	  /* Empty. */ { NoExpr }
+	| expr { $1 }
 
 arg_list:
 	  /* Empty */ { [] }

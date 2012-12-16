@@ -7,34 +7,35 @@ type op =
 	| And | Or | Not
 	| Gt | Ge | Eq | Neq | Le | Lt
 	| Assign
-	| Dot | At | Trans;;
+	| Dot | At | Trans | Index
 
 (* Basic type literals. *)
-type basic_literal =
+and basic_literal =
 	  IntLit of int
 	| DoubleLit of float
 	| CharLit of char
-	| BoolLit of bool;;
+	| BoolLit of bool
+	| ObjectLit of object_literal
+	| ListLit of type_spec * expr list
 
 (*** Productions. ***)
 
 (* Type specifiers. *)
-type type_spec =
+and type_spec =
 	  Int
 	| Double
 	| Char
 	| Bool
 	| Void
 	| Class of string
-	| Object
-	| FuncType of type_spec * type_spec list;;
+	| FuncType of type_spec * type_spec list
+	| ListType of type_spec
 
 (* Expressions. *)
-type expr =
+and expr =
 		Id of string
 	| BasicLit of basic_literal
 	| FuncLit of func_literal
-	| ObjectLit of object_literal
 	| This
 	| UnaryOp of op * expr
 	| BinaryOp of expr * op * expr
@@ -54,7 +55,7 @@ and func_literal = type_spec * param list * stmt
 
 (* Object declaration. *)
 and state = string * stmt
-and object_literal = type_spec * stmt list
+and object_literal = type_spec
 
 (* Overall structures of statements. *)
 and stmt =
@@ -62,7 +63,6 @@ and stmt =
 	| BasicDecl of type_spec * basic_init_decl list
 	| FuncDecl of string * expr
 	| ClassDecl of string * state list * stmt list
-	| ObjectDecl of string * expr
 (* Expression statement. *)
 	| Expr of expr
 (* Compound statement. *)
@@ -77,9 +77,7 @@ and stmt =
 	| Continue
 	| Break
 	| Return of expr
-	| NoStmt;;
-
-(* TODO Lists and strings. *)
+	| NoStmt
 
 (* input *)
-type program = Program of stmt list;;
+and program = Program of stmt list;;
