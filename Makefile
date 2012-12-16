@@ -24,9 +24,10 @@ CLEAN_OBJS =\
 
 .PHONY: all
 all: masl
+	export OCAMLRUNPARAM=b
 
 masl : $(MASL_OBJS)
-	ocamlc -o $@ $(MASL_OBJS)
+	ocamlc -g -o $@ $(MASL_OBJS)
 
 scanner.ml: scanner.mll
 	ocamllex scanner.mll
@@ -35,22 +36,22 @@ parser.ml parser.mli: parser.mly
 	ocamlyacc -v parser.mly
 
 %.cmo: %.ml
-	ocamlc -c $<
+	ocamlc -c -g $<
 
 %.cmi: %.mli
-	ocamlc -c $<
+	ocamlc -c -g $<
 
 ast.cmi: ast.ml
-	ocamlc -c ast.ml
+	ocamlc -c -g ast.ml
 
 astutils.cmi: printast.ml
-	ocamlc -c printast.ml
+	ocamlc -c -g printast.ml
 
 translate.cmi: translate.ml
-	ocamlc -c translate.ml
+	ocamlc -c -g translate.ml
 
 toplevel.cmo toplevel.cmi: toplevel.ml
-	ocamlc -c toplevel.ml
+	ocamlc -c -g toplevel.ml
 
 .PHONY: clean
 clean:
