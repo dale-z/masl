@@ -1,0 +1,52 @@
+/*
+*
+* Conway's Game of Life implemented using MASL.
+* Please refer to http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+* for a brief description about the rules of this game.
+*
+*/
+
+// Define the cell in the game as a class.
+class Cell {
+	// The initial state of the cell.
+	state Init {
+		object[] neighbors = container[{    // object ???
+			(x - 1, y - 1), (x - 1, y), (x - 1, y + 1),
+			(x, y - 1), (x, y + 1),
+			(x + 1, y - 1), (x + 1, y), (x + 1, y + 1)
+		}];
+	}
+	
+	// If the cell is alive, it will only live on with 2 or 3 live neighbors.
+	state Live {
+		if(countLiveNeighbors() < 2 || countLiveNeighbors() > 3) ->Dead
+	}
+
+	// If the cell is dead, only when exactly 3 live neighbors will render it alive.
+	state Dead {
+		if(countLiveNeighbors() == 3) ->Live
+	}
+
+	// The coordinate of the cell.
+	int x, y;
+	// A routine counting the number of live neighbors.
+	int countLiveNeighbors() {
+		return neighbors.count(boolean (object cell) {return cell@Live;});
+	}
+}
+
+// Initialize the container for all the cells as a 2D array.
+container = Array {d = 2, size = (60, 80)};
+
+// fill the container with cells in random states.
+for((int, int) (x, y) : {(0, 0)..(59, 79)}) {
+	object cell;
+	if(math.randomInt() % 2 == 0) cell = Cell {.x = x, .y = y}->Live;
+	else cell = Cell {.x = x, .y = y}->Dead;
+	container[(x, y)] = cell;
+}
+
+// Set the time step (in milliseconds) and start the simulation.
+timeStep = 30;
+start();
+stop(10000);
