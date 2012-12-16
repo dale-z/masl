@@ -81,8 +81,10 @@ and translate_stmt indent node = match node with
 		translate_stmt ("  " ^ indent) body ^
 		indent ^ "}\n"
   | ForEach(type_spec, iter, container, body) -> indent ^ "#ForEach#\n"
-  | While(pred, body) -> indent ^ "#While#\n"
-  | DoWhile(body, pred) -> indent ^ "#DoWhile#\n"
+  | While(pred, body) -> indent ^ "while(" ^ 
+		translate_expr pred ^ ") {\n" ^
+		translate_stmt ("  " ^ indent) body ^ "}\n"
+  | DoWhile(body, pred) -> indent ^ "do {" ^ translate_stmt ("  " ^ indent) body ^ "}while(" ^ translate_expr pred ^ ");\n"
 	(* jump_stmt *)
   | Continue -> indent ^ "continue;\n"
   | Break -> indent ^ "break;\n"
