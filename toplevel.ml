@@ -1,4 +1,5 @@
 open Ast;;
+open Astutils;;
 
 let main () =
     let lexbuf = Lexing.from_channel stdin in
