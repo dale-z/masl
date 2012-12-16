@@ -105,7 +105,7 @@ and token_parser = parse
 	| '\'' single_char '\'' as lxm	{ CHAR_LITERAL(lxm.[1]) }
 	| '\''  escape_sequence_char '\'' as lxm { CHAR_LITERAL(Scanf.sscanf ("\"" ^ lxm ^ "\"") "%S%!" (fun u -> u.[1])) }
 	| "true" | "false" as lxm	{ BOOL_LITERAL(bool_of_string lxm) }
-	| '\"' (single_char_string | escape_sequence_string)* '\"'	as lxm { STRING_LITERAL(explode (Scanf.sscanf ("\"" ^ lxm ^ "\"") "%S%!" (fun u -> u))) }
+	| '"' (single_char_string | escape_sequence_string)* '"'	as lxm { STRING_LITERAL(explode (Scanf.sscanf ("\"" ^ (String.sub lxm 1 (String.length lxm - 2)) ^ "\"") "%S%!" (fun u -> u))) }
 	| _ as lxm { raise (Failure("illegal token" ^ (Char.escaped lxm))); }
 	| eof { EOF }
 	(* TODO Handle EOF and invalid input. *)
