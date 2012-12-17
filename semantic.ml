@@ -53,7 +53,16 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 		if check_expr v_table c_table s_table env (Void, level) expr then
 			(v_table, c_table, s_table)
 		else
-			raise (Failure("Statement Error"))
+			raise (Failure("Expression Statement Error"))
+	| CompStmt(stmt_list) -> 
+		let rec check_comp_stmt list = 
+			match list with
+			| [] -> (v_table, c_table, s_table)
+			| head::tail -> 
+				ignore(check_stmt 3 (level + 1) (v_table, c_table, s_table) head);
+				check_comp_stmt tail				
+		in check_comp_stmt stmt_list
+	| NoStmt -> (v_table, c_table, s_table)
 	| _ -> raise (Failure("Not Finished"))
 
 (*check expression*)
@@ -80,7 +89,7 @@ and check_expr v_table c_table s_table env (type_spec, level) expr =
 				match NameMap.find id v_table with
 				| (some_type, _) -> type_spec = some_type
 		else
-			raise (Failure("Cannot Find Identifier."))
+			raise (Failure("Cannot Find Identifier " ^ id))
 	| BasicLit(basic_literal) ->
 		(
 		match basic_literal with
@@ -140,7 +149,7 @@ and check_expr v_table c_table s_table env (type_spec, level) expr =
 						| (FuncType(a, b), _) -> false
 						| _ -> (check_expr v_table c_table s_table env (NameMap.find id v_table) e2)
 					else
-						raise (Failure("Cannot Find Identifier."))
+						raise (Failure("Cannot Find Identifier "^id))
 				| BinaryOp(e1', op', e2') ->
 					(
 					match op' with
@@ -224,6 +233,15 @@ and add_c_table v_table c_table s_table id stmt_list level =
 					let rec add_to_table c_table list1 list2 = 
 						match (list1, list2) with
 						| ([] ,[]) -> c_table
+						| ([], (id2, (t2, l2))::tl2) ->
+							add_to_table
+							(
+							if NameMap.mem id c_table then
+								NameMap.add id ((id2, t2)::(NameMap.find id c_table)) c_table
+							else
+								NameMap.add id [(id2, t2)] c_table
+							)
+							list1 tl2
 						| (hd1::tl1, hd2::tl2) -> 
 							if hd1 = hd2 then
 								add_to_table c_table tl1 tl2 
@@ -259,6 +277,15 @@ and add_c_table v_table c_table s_table id stmt_list level =
 					let rec add_to_table c_table list1 list2 = 
 						match (list1, list2) with
 						| ([] ,[]) -> c_table
+						| ([], (id2, (t2, l2))::tl2) ->
+							add_to_table
+							(
+							if NameMap.mem id c_table then
+								NameMap.add id ((id2, t2)::(NameMap.find id c_table)) c_table
+							else
+								NameMap.add id [(id2, t2)] c_table
+							)
+							list1 tl2
 						| (hd1::tl1, hd2::tl2) -> 
 							if hd1 = hd2 then
 								add_to_table c_table tl1 tl2 
