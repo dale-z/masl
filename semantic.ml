@@ -46,7 +46,9 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 		in check_basic_init_decl v_table basic_init_decl
 	| ClassDecl(id, state_list, stmt_list) -> (*I am working on it!!!!!!!!!!!!!!!!!!*)
 		if env = 0 then
-			(v_table, (add_c_table v_table c_table s_table id stmt_list level), (add_s_table v_table c_table s_table id state_list level))
+			match add_s_c_table v_table c_table s_table id state_list stmt_list level with
+			| (c_table, s_table) -> (v_table, c_table, s_table)
+			(*(v_table, (add_c_table v_table c_table s_table id stmt_list level), (add_s_table v_table c_table s_table id state_list level))*)
 		else
 			raise (Failure("Cannot Define Class"))					 
 	| Expr(expr) -> 
@@ -55,13 +57,13 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 		else
 			raise (Failure("Expression Statement Error"))
 	| CompStmt(stmt_list) -> 
-		let rec check_comp_stmt list = 
+		let rec check_comp_stmt v_table' list = 
 			match list with
 			| [] -> (v_table, c_table, s_table)
 			| head::tail -> 
-				ignore(check_stmt 3 (level + 1) (v_table, c_table, s_table) head);
-				check_comp_stmt tail				
-		in check_comp_stmt stmt_list
+				match check_stmt 3 (level + 1) (v_table', c_table, s_table) head with
+				| (v_table'', c_table, s_table) -> check_comp_stmt v_table'' tail
+		in check_comp_stmt v_table stmt_list
 	| NoStmt -> (v_table, c_table, s_table)
 	| _ -> raise (Failure("Not Finished"))
 
@@ -191,6 +193,13 @@ and find_cls_mem c_table id id' =
 		in find_mem (NameMap.find id c_table) id'
 	else
 		raise (Failure("Cannot Find Class "^id))
+		
+(*add states and stmts to the table*)
+
+and add_s_c_table v_table c_table s_table id state_list stmt_list level =
+	match add_c_table v_table c_table s_table id stmt_list level with
+	| (v_table', c_table') -> (c_table', add_s_table v_table' c_table s_table id state_list level)
+	| _ -> raise (Failure("Fatal Error"))
 
 (*add states to the state table*)
 
@@ -221,9 +230,9 @@ and add_s_table v_table c_table s_table id state_list level =
 (*add class to the class table*)
 
 and add_c_table v_table c_table s_table id stmt_list level =
-	let rec add_class c_table list =
+	let rec add_class v_table c_table list =
 		match list with
-		| [] -> c_table
+		| [] -> (v_table, c_table)
 		| head::tail ->
 			match head with
 			| BasicDecl(type_spec, basic_init_decl_list) ->
@@ -232,7 +241,7 @@ and add_c_table v_table c_table s_table id stmt_list level =
 				| (v_table',_,_) -> 
 					let rec add_to_table c_table list1 list2 = 
 						match (list1, list2) with
-						| ([] ,[]) -> c_table
+						| ([] ,[]) -> add_class v_table' c_table tail
 						| ([], (id2, (t2, l2))::tl2) ->
 							add_to_table
 							(
@@ -276,7 +285,7 @@ and add_c_table v_table c_table s_table id stmt_list level =
 				| (v_table',_,_) -> 
 					let rec add_to_table c_table list1 list2 = 
 						match (list1, list2) with
-						| ([] ,[]) -> c_table
+						| ([] ,[]) -> add_class v_table' c_table tail
 						| ([], (id2, (t2, l2))::tl2) ->
 							add_to_table
 							(
@@ -314,7 +323,7 @@ and add_c_table v_table c_table s_table id stmt_list level =
 					in add_to_table c_table (NameMap.bindings v_table) (NameMap.bindings v_table')
 				| _ -> raise(Failure("Statement Error"))
 				)
-			| _ -> c_table 
-	in add_class c_table stmt_list
+			| _ -> add_class v_table c_table tail 
+	in add_class v_table c_table stmt_list
 	 
 ;;
