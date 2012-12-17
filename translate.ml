@@ -41,7 +41,7 @@ and translate_type_spec node = match node with
 	| Double -> "double"
 	| Bool -> "boolean"
 	| Char -> "char"
-	| FuncType(return_type, param_types) -> "#FuncType#"
+	| FuncType(return_type, param_types) -> "MaslFunction<" ^ (translate_type_spec return_type) ^ ">"
 	| Class(id) -> "class " ^ id
 	(*| Object -> "object"*)
   | ListType(type_spec) -> "ArrayList<" ^ (translate_type_spec type_spec) ^ ">"
@@ -56,7 +56,7 @@ and translate_stmt indent node = match node with
 		let decls = String.sub str 0 (String.length str - 1) in
 		indent ^ translate_type_spec type_spec ^ " " ^ decls ^
 		";\n"
-  | FuncDecl(id, expr) -> indent ^ "#FuncDecl#\n"
+  | FuncDecl(id, expr) -> indent ^ "FuncDecl"
 	| ClassDecl(id, states, stmts) -> indent ^ "classdecl\n"
   (*| ObjectDecl(id, expr) -> indent ^ "objectdecl\n"*)
 	(* expr_stmt *)
@@ -152,7 +152,7 @@ and translate_decl type_spec decl = match decl with
     	| Double -> "0.0"
     	| Bool -> "false"
     	| Char -> "'\\0'"
-    	| FuncType(return_type, param_types) -> "#FuncTypeDefaultValue#"
+    	| FuncType(return_type, param_types) -> "null"
     	| Class(id) -> "#ClassDefaultValue#"
     	| ListType(type_spec) -> "#List#"
     	(*| Object -> "#ObjectDefaultValue#"*)
