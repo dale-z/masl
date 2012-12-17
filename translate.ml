@@ -168,7 +168,13 @@ and translate_decl type_spec decl = match decl with
 		end
   | BasicInitAssign(id, expr) ->
 		id ^ "=" ^ translate_expr expr
-and translate_states states = "#States#"
+and translate_states states = 
+  (List.fold_left
+			(fun acc state -> acc ^ "private void " ^ (fst state) ^ "() {\n" ^ 
+      translate_stmt "  " (snd state) ^ "}\n")
+				"" states
+	)
+
 (*Generate __update function*)
 and generate_state_update states = "public void __update() {\n" ^ 
 		(List.fold_left
