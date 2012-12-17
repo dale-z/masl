@@ -23,7 +23,7 @@ let rec translate sim_name node =
   					(List.filter
 							(fun stmt -> match stmt with
     						| ClassDecl(_, _, _) -> true
-								| FuncDecl(_, _) -> true
+								| FuncDecl(_, _, _) -> true
     						| _ -> false) stmts)) ^
 				"  public void init() {\n" ^
 				(* Everything other than class definition goes into *)
@@ -33,7 +33,7 @@ let rec translate sim_name node =
   					(List.filter
 							(fun stmt -> match stmt with
     						| ClassDecl(_, _, _) -> false
-								| FuncDecl(_, _) -> false
+								| FuncDecl(_, _, _) -> false
     						| _ -> true) stmts)) ^
 				"  }\n" ^
 				"}\n"
@@ -59,24 +59,14 @@ and translate_stmt indent node = match node with
 		let decls = String.sub str 0 (String.length str - 1) in
 		indent ^ translate_type_spec type_spec ^ " " ^ decls ^
 		";\n"
-  | FuncDecl(id, expr) -> 
-    begin
-      match expr with
-	    | FuncLit(type_spec, param_list, comp_stmt) -> 
-        "MaslFunction<" ^ (translate_type_spec type_spec) ^ "> " ^ 
-        id ^ " = new MaslFunction<" ^ (translate_type_spec type_spec) ^ 
-        ">() {\n@Override\npublic " ^ (translate_type_spec type_spec) ^
-        " invoke(Object... args) {\n" ^
-        let idxs = List.mapi (fun idx ele -> idx) param_list in
-        (List.fold_left2
-          (fun acc param idx -> acc ^ (translate_type_spec (fst param)) ^ " " ^ (snd param) ^ 
-          " = (" ^ (translate_type_spec (fst param) ^ ") args[" ^ (string_of_int idx) ^ "];\n")
-          )
-          "" param_list idxs
-        ) ^
-        (translate_stmt "  " comp_stmt)
-      | _ -> "#Expression which returns a function#"
-    end
+  | FuncDecl(type_spec, id, expr) -> let return_type = 
+    begin 
+      match type_spec with 
+      | FuncType(rt,_) -> rt 
+      | _ -> Void (*Impossible, used to suppress warning*)
+    end 
+    in "MaslFunction<" ^ (translate_type_spec return_type) ^ "> " ^ 
+    id ^ "=" ^ (translate_expr expr)
 	| ClassDecl(id, states, stmts) -> indent ^ "public class " ^ 
     id ^ " extends MaslClass {\n" ^ (generate_state_update states) ^
     (translate_states states) ^
@@ -131,7 +121,17 @@ and translate_expr node =
 		| ObjectLit(lit) -> "ObjectLit"
 		| ListLit(type_spec, exprs) -> "ObjectLit"
 		end
-	| FuncLit(lit) -> "#FuncLit#"
+	| FuncLit(type_spec, param_list, comp_stmt) -> "new MaslFunction<" ^ (translate_type_spec type_spec) ^ 
+        ">() {\n@Override\npublic " ^ (translate_type_spec type_spec) ^
+        " invoke(Object... args) {\n" ^
+        let idxs = List.mapi (fun idx ele -> idx) param_list in
+        (List.fold_left2
+          (fun acc param idx -> acc ^ (translate_type_spec (fst param)) ^ " " ^ (snd param) ^ 
+          " = (" ^ (translate_type_spec (fst param) ^ ") args[" ^ (string_of_int idx) ^ "];\n")
+          )
+          "" param_list idxs
+        ) ^
+        (translate_stmt "  " comp_stmt)
 	(*| ObjectLit(lit) -> "ObjectLit"*)
 	| This -> "this"
 	| UnaryOp(op, expr) ->
