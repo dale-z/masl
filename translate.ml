@@ -43,7 +43,8 @@ and translate_type_spec node = match node with
 	| Char -> "char"
 	| FuncType(return_type, param_types) -> "#FuncType#"
 	| Class(id) -> "class " ^ id
-	| Object -> "object"
+	(*| Object -> "object"*)
+  | ListType(type_spec) -> "ArrayList<" ^ (translate_type_spec type_spec) ^ ">"
 	| Void -> "void"
 and translate_stmt indent node = match node with
 	(* decl_stmt *)
@@ -57,7 +58,7 @@ and translate_stmt indent node = match node with
 		";\n"
   | FuncDecl(id, expr) -> indent ^ "#FuncDecl#\n"
 	| ClassDecl(id, states, stmts) -> indent ^ "classdecl\n"
-  | ObjectDecl(id, expr) -> indent ^ "objectdecl\n"
+  (*| ObjectDecl(id, expr) -> indent ^ "objectdecl\n"*)
 	(* expr_stmt *)
   | Expr(expr) -> indent ^ translate_expr expr ^ ";\n"
 	(* comp_stmt *)
@@ -100,9 +101,11 @@ and translate_expr node =
   		| DoubleLit(lit) -> string_of_float lit
   		| CharLit(lit) -> Char.escaped lit
   		| BoolLit(lit) -> string_of_bool lit
+		| ObjectLit(lit) -> "ObjectLit"
+		| ListLit(type_spec, exprs) -> "ObjectLit"
 		end
 	| FuncLit(lit) -> "#FuncLit#"
-	| ObjectLit(lit) -> "ObjectLit"
+	(*| ObjectLit(lit) -> "ObjectLit"*)
 	| This -> "this"
 	| UnaryOp(op, expr) ->
 		"(" ^
@@ -151,7 +154,8 @@ and translate_decl type_spec decl = match decl with
     	| Char -> "'\\0'"
     	| FuncType(return_type, param_types) -> "#FuncTypeDefaultValue#"
     	| Class(id) -> "#ClassDefaultValue#"
-    	| Object -> "#ObjectDefaultValue#"
+    	| ListType(type_spec) -> "#List#"
+    	(*| Object -> "#ObjectDefaultValue#"*)
     	| Void -> "#VoidDefaultValue#"
 		end
   | BasicInitAssign(id, expr) ->
