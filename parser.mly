@@ -206,8 +206,9 @@ expr:
 	| expr DOT expr { BinaryOp($1, Dot, $3) }
 	| expr AT expr { BinaryOp($1, At, $3) }
 	| expr TRANS expr { BinaryOp($1, Trans, $3) }
-	| expr ASSIGN expr {BinaryOp($1, Assign, $3) }
+	| expr ASSIGN expr { BinaryOp($1, Assign, $3) }
 	| expr COLON LSQBRA expr RSQBRA { BinaryOp($1, Index, $4) }
+	| expr COLON DOT expr { BinaryOp($1, LDot, $4) }
 
 expr_opt:
 	  /* Empty. */ { NoExpr }

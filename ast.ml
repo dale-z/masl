@@ -7,7 +7,7 @@ type op =
 	| And | Or | Not
 	| Gt | Ge | Eq | Neq | Le | Lt
 	| Assign
-	| Dot | At | Trans | Index
+	| Dot | At | Trans | Index | LDot
 
 (* Basic type literals. *)
 and basic_literal =
