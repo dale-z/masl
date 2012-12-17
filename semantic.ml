@@ -64,6 +64,13 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 				match check_stmt 3 (level + 1) (v_table', c_table, s_table) head with
 				| (v_table'', c_table, s_table) -> check_comp_stmt v_table'' tail
 		in check_comp_stmt v_table stmt_list
+	| If(expr, stmt1, stmt2) ->
+		ignore (check_stmt env (level + 1) (v_table, c_table, s_table) stmt1);
+		ignore (check_stmt env (level + 1) (v_table, c_table, s_table) stmt2);
+		if (check_expr v_table c_table s_table env (Bool, level) expr) then 
+			(v_table, c_table, s_table)
+		else 
+			raise (Failure("If Statement Error"))
 	| NoStmt -> (v_table, c_table, s_table)
 	| _ -> raise (Failure("Not Finished"))
 
@@ -82,11 +89,13 @@ and check_expr v_table c_table s_table env (type_spec, level) expr =
 				| _ -> false
 				)
 			| Double -> 
+				(
 				match NameMap.find id v_table with
 				| (Int, _) -> true
 				| (Char, _) -> true
 				| (Double, _) -> true
 				| _ -> false
+				)
 			| els -> 
 				match NameMap.find id v_table with
 				| (some_type, _) -> type_spec = some_type
