@@ -27,7 +27,7 @@ all: masl
 	export OCAMLRUNPARAM=b
 
 masl : $(MASL_OBJS)
-	ocamlc -g -o $@ $(MASL_OBJS)
+	ocamlc -g -o $@ str.cma $(MASL_OBJS)
 
 scanner.ml: scanner.mll
 	ocamllex scanner.mll

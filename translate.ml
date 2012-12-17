@@ -6,6 +6,7 @@
 (* *)
 
 open Ast;;
+open Str;;
 
 (* translate: string -> Ast.program -> (string * string) list *)
 
@@ -43,7 +44,8 @@ and translate_type_spec node = match node with
 	| Char -> "Char"
 	| FuncType(return_type, param_types) -> "MaslFunction<" ^ 
     (translate_type_spec return_type) ^ ">"
-	| Class(id) -> "class " ^ id
+	(*| Class(id) -> "class " ^ id*)
+	| Class(id) -> id
 	(*| Object -> "object"*)
   | ListType(type_spec) -> "MaslList<" ^ (translate_type_spec type_spec) ^ ">"
 	| Void -> "void"
@@ -166,7 +168,7 @@ and translate_expr node =
 			| _ -> ""
 		end ^
 		(translate_expr expr2) ^ ")"
-	| FuncCall(func, args) -> "FuncCall"
+	| FuncCall(func, args) -> (translate_expr func) ^ ".invoke(" ^ (translate_arg_list args) ^ ");"
 	| NoExpr -> ""
 and translate_decl type_spec decl = match decl with
 	  BasicInitDefault(id) ->
@@ -178,8 +180,8 @@ and translate_decl type_spec decl = match decl with
     	| Bool -> "false"
     	| Char -> "'\\0'"
     	| FuncType(return_type, param_types) -> "null"
-    	| Class(id) -> "#ClassDefaultValue#"
-    	| ListType(type_spec) -> "#List#"
+    	| Class(id) -> "new " ^ id ^ "()"
+    	| ListType(type_spec) -> "new MaslList<" ^ (translate_type_spec type_spec) ^ ">();"
     	(*| Object -> "#ObjectDefaultValue#"*)
     	| Void -> "#VoidDefaultValue#"
 		end
@@ -199,4 +201,9 @@ and generate_state_update states = "public void __update() {\n" ^
       (fst state) ^ "();break;\n")
 				"" states
     ) ^ "default:\nbreak;\n}\n"
+and translate_arg_list arg_list = let str = 
+  (List.fold_left 
+    (fun acc arg -> acc ^ "," ^ (translate_expr arg))
+    "" arg_list
+  ) in replace_first (regexp ",") "" str
 ;;
