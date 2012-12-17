@@ -41,10 +41,11 @@ and translate_type_spec node = match node with
 	| Double -> "double"
 	| Bool -> "boolean"
 	| Char -> "char"
-	| FuncType(return_type, param_types) -> "#FuncType#"
+	| FuncType(return_type, param_types) -> "MaslFunction<" ^ 
+    (translate_type_spec return_type) ^ ">"
 	| Class(id) -> "class " ^ id
 	(*| Object -> "object"*)
-  | ListType(type_spec) -> "ArrayList<" ^ (translate_type_spec type_spec) ^ ">"
+  | ListType(type_spec) -> "MaslList<" ^ (translate_type_spec type_spec) ^ ">"
 	| Void -> "void"
 and translate_stmt indent node = match node with
 	(* decl_stmt *)
@@ -56,8 +57,15 @@ and translate_stmt indent node = match node with
 		let decls = String.sub str 0 (String.length str - 1) in
 		indent ^ translate_type_spec type_spec ^ " " ^ decls ^
 		";\n"
-  | FuncDecl(id, expr) -> indent ^ "#FuncDecl#\n"
-	| ClassDecl(id, states, stmts) -> indent ^ "classdecl\n"
+  | FuncDecl(id, expr) -> indent ^ "FuncDecl"
+	| ClassDecl(id, states, stmts) -> indent ^ "public class " ^ 
+    id ^ " extends MaslClass {\n" ^ (generate_state_update states) ^
+    (translate_states states) ^
+    (* Add "public" before each statement*) 
+    (List.fold_left
+        (fun acc stmt -> acc ^ "\npublic " ^ (translate_stmt "  " stmt))
+        "" stmts
+    ) ^ "}\n"
   (*| ObjectDecl(id, expr) -> indent ^ "objectdecl\n"*)
 	(* expr_stmt *)
   | Expr(expr) -> indent ^ translate_expr expr ^ ";\n"
@@ -152,7 +160,7 @@ and translate_decl type_spec decl = match decl with
     	| Double -> "0.0"
     	| Bool -> "false"
     	| Char -> "'\\0'"
-    	| FuncType(return_type, param_types) -> "#FuncTypeDefaultValue#"
+    	| FuncType(return_type, param_types) -> "null"
     	| Class(id) -> "#ClassDefaultValue#"
     	| ListType(type_spec) -> "#List#"
     	(*| Object -> "#ObjectDefaultValue#"*)
@@ -160,4 +168,18 @@ and translate_decl type_spec decl = match decl with
 		end
   | BasicInitAssign(id, expr) ->
 		id ^ "=" ^ translate_expr expr
+and translate_states states = 
+  (List.fold_left
+			(fun acc state -> acc ^ "private void " ^ (fst state) ^ "() {\n" ^ 
+      translate_stmt "  " (snd state) ^ "}\n")
+				"" states
+	)
+
+(*Generate __update function*)
+and generate_state_update states = "public void __update() {\n" ^ 
+		(List.fold_left
+			(fun acc state -> acc ^ "case \"" ^ (fst state) ^ "\":" ^ 
+      (fst state) ^ "();break;\n")
+				"" states
+    ) ^ "default:\nbreak;\n}\n"
 ;;
