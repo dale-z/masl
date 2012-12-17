@@ -61,7 +61,7 @@ and object_literal = type_spec
 and stmt =
 (* Declaration statements. *)
 	| BasicDecl of type_spec * basic_init_decl list
-	| FuncDecl of string * expr
+	| FuncDecl of type_spec * string * expr
 	| ClassDecl of string * state list * stmt list
 (* Expression statement. *)
 	| Expr of expr
