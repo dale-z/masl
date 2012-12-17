@@ -30,8 +30,9 @@ and print_stmt indent node = match node with
 			print_type_spec ("  " ^ indent) type_spec;
     	List.iter (print_basic_init_decl ("  " ^ indent)) decl_list;
 			print_string (indent ^ "}\n")
-  | FuncDecl(id, expr) ->
+  | FuncDecl(type_spec, id, expr) ->
 		print_string (indent ^ "FuncDecl {\n");
+		print_type_spec ("  " ^ indent) type_spec;
 		print_string ("  " ^ indent ^ "_Id { " ^ id ^ " }\n");
 		print_expr ("  " ^ indent) expr;
 		print_string (indent ^ "}\n")

@@ -121,8 +121,8 @@ basic_init_decl:
 	| ID ASSIGN expr { BasicInitAssign($1, $3) }
 
 func_decl:
-	  FUN ID ASSIGN expr { FuncDecl($2, $4) }
-	| type_specifier ID LPAREN param_list RPAREN comp_stmt { FuncDecl($2, FuncLit($1, $4, $6)) }
+	  FUN LPAREN type_specifier RPAREN ID ASSIGN expr { FuncDecl($3, $5, $7) }
+	| type_specifier ID LPAREN param_list RPAREN comp_stmt { FuncDecl(FuncType($1, List.map fst $4), $2, FuncLit($1, $4, $6)) }
 
 param_list:
 	  /* Empty. */ { [] }
