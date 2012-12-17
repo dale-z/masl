@@ -118,8 +118,9 @@ and translate_expr node =
   		| DoubleLit(lit) -> string_of_float lit
   		| CharLit(lit) -> Char.escaped lit
   		| BoolLit(lit) -> string_of_bool lit
-		| ObjectLit(lit) -> "ObjectLit"
-		| ListLit(type_spec, exprs) -> "ObjectLit"
+		| ObjectLit(lit) -> "new " ^ (translate_type_spec lit) ^ "()"
+		| ListLit(type_spec, exprs) -> "new MaslList<" ^ (translate_type_spec type_spec) ^ 
+      ">(" ^ (translate_arg_list exprs) ^ ")"
 		end
 	| FuncLit(type_spec, param_list, comp_stmt) -> "new MaslFunction<" ^ (translate_type_spec type_spec) ^ 
         ">() {\n@Override\npublic " ^ (translate_type_spec type_spec) ^
