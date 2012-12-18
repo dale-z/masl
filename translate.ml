@@ -41,7 +41,7 @@ and translate_type_spec node = match node with
 	| Int -> "Integer"
 	| Double -> "Double"
 	| Bool -> "Boolean"
-	| Char -> "Char"
+	| Char -> "Character"
 	| FuncType(return_type, param_types) -> "MaslFunction<" ^ 
     (translate_type_spec return_type) ^ ">"
 	(*| Class(id) -> "class " ^ id*)
@@ -207,12 +207,12 @@ and translate_states states =
 	)
 
 (*Generate __update function*)
-and generate_state_update states = "public void __update() {\n" ^ 
+and generate_state_update states = "public void __update() {\n if(" ^ 
 		(List.fold_left
-			(fun acc state -> acc ^ "case \"" ^ (fst state) ^ "\":" ^ 
-      (fst state) ^ "();break;\n")
+			(fun acc state -> acc ^ "\"" ^ (fst state) ^ "\".equals(__curState)) {\n" ^ 
+      (fst state) ^ "();\n} else if(")
 				"" states
-    ) ^ "default:\nbreak;\n}\n"
+    ) ^ "true){}\n}\n"
 and translate_arg_list arg_list = let str = 
   (List.fold_left 
     (fun acc arg -> acc ^ "," ^ (translate_expr arg))
