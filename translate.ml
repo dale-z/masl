@@ -87,7 +87,8 @@ and translate_stmt indent node = match node with
     (List.fold_left
         (fun acc stmt -> acc ^ "\npublic " ^ (translate_stmt "  " stmt))
         "" stmts
-    ) ^ "\npublic String __curState = null;\n" ^ "}\n"
+    ) ^ "\npublic String __curState = null;\n" ^ 
+    "public String toString() {\nreturn \"" ^ id ^ "{x:\" + x + \",y:\" + y + \",r:\" + r + \",g:\" + g + \",b:\" + b + \"}@\" + __curState;\n}\n}\n"
   (*| ObjectDecl(id, expr) -> indent ^ "objectdecl\n"*)
 	(* expr_stmt *)
   | Expr(expr) -> indent ^ translate_expr expr ^ ";\n"
