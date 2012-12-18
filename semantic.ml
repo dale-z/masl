@@ -228,7 +228,7 @@ and find_cls_mem c_table id id' =
 and add_s_c_table v_table c_table s_table id state_list stmt_list level =
 	match add_c_table v_table c_table s_table id stmt_list level with
 	| (v_table', c_table') ->
-		if check_state v_table c_table s_table id state_list level then 
+		if check_state v_table' c_table' s_table id state_list level then 
 			(c_table', add_s_table v_table' c_table s_table id state_list level)
 		else
 			raise(Failure("States Error"))
