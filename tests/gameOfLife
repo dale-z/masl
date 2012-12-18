@@ -7,7 +7,7 @@
 */
 
 // Define the cell in the game as a class.
-class Cell {
+Class Cell {
 	// The initial state of the cell.
 	state Init {
 		object[] neighbors = container[{    // object ???
