@@ -16,6 +16,7 @@ end)
 (*3: compond statement*)
 (*4: state*)
 (*5: if*)
+(*6: function*)
 
 let rec check_semantic program =	 
 	match program with
@@ -45,11 +46,15 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
   				else
   					raise (Failure("Basic Assignment Check Fails\n"))
 		in check_basic_init_decl v_table basic_init_decl
-	| ClassDecl(id, state_list, stmt_list) -> (*I am working on it!!!!!!!!!!!!!!!!!!*)
+	| FuncDecl(type_spec, id, expr) ->
+		if (check_expr v_table c_table s_table env ((6, id)::level) expr) = type_spec then
+			((NameMap.add id (type_spec, level) v_table), c_table, s_table)
+		else
+			raise(Failure("Function Type Mismatch"))
+	| ClassDecl(id, state_list, stmt_list) ->
 		if env = 0 then
 			match add_s_c_table v_table c_table s_table id state_list stmt_list ((1, id)::level) with
-			| (c_table, s_table) -> (v_table, c_table, s_table)
-			(*(v_table, (add_c_table v_table c_table s_table id stmt_list level), (add_s_table v_table c_table s_table id state_list level))*)
+			| (c_table', s_table') -> (v_table, c_table', s_table')
 		else
 			raise (Failure("Cannot Define Class"))					 
 	| Expr(expr) -> 
@@ -70,6 +75,56 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 			(v_table, c_table, s_table)
 		else 
 			raise (Failure("If Statement Error"))
+	| For(stmt1, expr1, expr2, stmt2) ->
+		let v_table_tmp = v_table in
+			let (v_table_tmp, _, _) = (check_stmt env ((2, ""):: level) (v_table_tmp, c_table, s_table) stmt1)
+			in let (v_table_tmp, _, _) = 
+				if (check_expr v_table_tmp c_table s_table env level expr1) = Bool then
+					(v_table_tmp, c_table, s_table)
+				else raise (Failure("For Statement Error"))
+			in let (v_table_tmp, _, _) =
+				ignore(check_expr v_table_tmp c_table s_table env level expr2); 
+				(v_table_tmp, c_table, s_table)
+				in let (v_table_tmp, _, _) = (check_stmt env ((2, ""):: level) (v_table_tmp, c_table, s_table) stmt2)
+				in (v_table, c_table, s_table)
+	| While(expr, stmt1) ->
+		ignore (check_stmt env ((2, "")::level) (v_table, c_table, s_table) stmt1);
+		if (check_expr v_table c_table s_table env level expr) = Bool then 
+			(v_table, c_table, s_table)
+		else 
+			raise (Failure("While Statement Error"))
+	| Continue ->
+		if env = 2 then
+			(v_table, c_table, s_table)
+		else
+			raise(Failure("Continue Must Be in Loop"))
+	| Break ->
+		if env = 2 then
+			(v_table, c_table, s_table)
+		else
+			raise(Failure("Break Must Be in Loop"))
+	| Return(expr) ->
+		(
+		let rec find_func_type list =
+			match list with
+			| [] -> raise(Failure("Unkown Error"))
+			| head::tail -> 
+				match head with
+				| (environment, name) ->
+					if environment = 6 then
+						match NameMap.find name v_table with
+						| (FuncType(func_type,_),_) -> 
+							if func_type = Void then
+								raise(Failure("Function Has No Return"))
+							else
+								if (check_expr v_table c_table s_table env level expr) = func_type then
+									(v_table, c_table, s_table)
+								else
+									raise(Failure("Function Return Type Mismatch"))
+					else
+						find_func_type tail
+		in find_func_type level
+		) 
 	| NoStmt -> (v_table, c_table, s_table)
 	| _ -> raise (Failure("Not Finished"))
 
@@ -93,14 +148,16 @@ and check_expr v_table c_table s_table env level expr =
 		| ObjectLit(object_literal) -> object_literal
 		| ListLit(type_spec, expr_list) -> ListType(type_spec)
 		)
-	| FuncLit(type_spec, param_list, stmt) -> 
-		let rec get_func_param type_spec_list list = 
+	| FuncLit(type_spec, param_list, stmt) ->
+		let rec get_func_param type_spec_list list v_table' = 
 			match list with
-			| [] -> FuncType(type_spec, List.rev type_spec_list)
+			| [] -> 
+				ignore(check_stmt env level (v_table', c_table, s_table) stmt);
+				FuncType(type_spec, List.rev type_spec_list)
 			| head::tail -> 
 				match head with
-				| (t, _) ->  get_func_param (t::type_spec_list) tail
-		in get_func_param [] param_list
+				| (t, name) ->  get_func_param (t::type_spec_list) tail (NameMap.add name (t, level) v_table')
+		in get_func_param [] param_list v_table
 	| This ->
 		if env = 4 then
 			match level with
@@ -191,18 +248,103 @@ and check_expr v_table c_table s_table env level expr =
 								raise(Failure("Cannot Find Class Member"))
 						| _ -> raise (Failure("Dot Operation Error"))
 						) 
-					| Index -> Void(*?????????????*)
+					| Index ->
+						(
+						match (e1', e2') with
+						| (Id(id1), _) ->
+							if NameMap.mem id1 v_table then
+								match NameMap.find id1 v_table with
+								| (ListType(t), _) ->
+									if (check_expr v_table c_table s_table env level e2) = t then
+										t
+									else
+										raise(Failure("List Type Mismatch"))
+								| _ -> raise (Failure(id1^" is not a List"))
+							else
+								raise (Failure("Cannot Find List " ^ id1))
+						| _ -> raise (Failure("Index Operation Error"))
+						)	
 					| _ -> raise(Failure("Assignment Fails"))
 					)
 			in check_left_type e1			
-		| Trans -> Void (*????????*)
-		| At -> Void (*???*)
-		| Index -> Void (*?????????*)
-		| Dot -> Void (*??????????????*)
+		| Trans ->
+			(
+			match(e1, e2) with
+			| (Id(id1), Id(id2)) -> 
+				if find_cls_state s_table id1 id2 then
+					(*
+					match NameMap.find id1 v_table with
+					| (type_spec, _) -> type_spec
+					*)
+					Void 
+				else
+					raise(Failure("Cannot Find State "^id2))
+			| _ -> raise(Failure("Trans Operation Error"))
+			)
+		| At ->
+			(
+			match(e1, e2) with
+			| (Id(id1), Id(id2)) -> 
+				if find_cls_state s_table id1 id2 then
+					Bool 
+				else
+					raise(Failure("Cannot Find State "^id2))
+			| _ -> raise(Failure("At Operation Error"))
+			)
+		| Index ->
+			(
+			match check_expr v_table c_table s_table env level e1 with
+			| ListType(t) -> 
+				if (check_expr v_table c_table s_table env level e2) = Int then
+					ListType(t)
+				else
+					raise(Failure("Index Number Must Be an Integer"))
+			| _ -> raise(Failure("Index Operation Error"))
+			)
+		| Dot -> 
+			(
+			match (e1, e2) with
+			| (Id(id1), Id(id2)) -> find_cls_mem c_table id1 id2
+			| _ -> raise(Failure("Dot Operation Error"))
+			)
 		| LDot -> Void(*???????????*)
 		)
-	| FuncCall(e1, expr_list) -> Void(*???????????*)
+	| FuncCall(e1, expr_list) ->
+		match e1 with
+		| Id(id) ->
+			if NameMap.mem id v_table then
+				match NameMap.find id v_table with
+				| (FuncType(type_spec, type_list),_) ->
+					let rec check_param type_list expr_list =
+						 match (type_list, expr_list) with
+						| ([], []) -> type_spec
+						| (t::tail1, e::tail2) -> 
+							if (check_expr v_table c_table s_table env level e) = t then
+								check_param tail1 tail2
+							else
+								raise(Failure("Function Parameter Type Mismatch"))
+						| _ -> raise(Failure("Function Parameter Mismatch"))
+					in check_param type_list expr_list
+			else
+				raise(Failure("Cannot Find Function "^id))
+		| _ -> raise(Failure("Function Call Format Error"))
 	| NoExpr -> Void
+
+(*find the state of the object in state table*)
+
+and find_cls_state s_table id id' = 
+	if NameMap.mem id s_table then
+		let rec find_state list id = 
+			match list with
+			| [] -> raise(Failure("Cannot Find State "^id))
+			| head::tail ->
+				if head = id then
+					true
+				else
+					false
+		in find_state (NameMap.find id s_table) id'
+	else
+		raise(Failure("Cannot Find Class "^id))
 
 (*find the member of the object in Class table*)
 
@@ -218,7 +360,6 @@ and find_cls_mem c_table id id' =
 						m_type
 					else
 						find_mem tail id
-				| _ -> raise (Failure("Class Table Error "))
 		in find_mem (NameMap.find id c_table) id'
 	else
 		raise (Failure("Cannot Find Class "^id))
@@ -232,7 +373,6 @@ and add_s_c_table v_table c_table s_table id state_list stmt_list level =
 			(c_table', add_s_table v_table' c_table s_table id state_list level)
 		else
 			raise(Failure("States Error"))
-	| _ -> raise (Failure("Fatal Error"))
 
 (*check states of the class*)
 
@@ -247,9 +387,7 @@ and check_state v_table c_table s_table id state_list level =
 				| CompStmt(t) -> 
 					match check_stmt 4 ((4, "")::level) (v_table, c_table, s_table) c_stmt with
 					| (_,_,_) -> check_each_state tail
-					| _ -> raise (Failure("Statement Error"))
-				| _ -> raise (Failure("Need an cstmt"))
-			| _ -> raise (Failure("Add State Error")) 
+				| _ -> raise (Failure("Need an cstmt")) 
 	in check_each_state state_list
 
 (*add states to the state table*)
@@ -271,8 +409,7 @@ and add_s_table v_table c_table s_table id state_list level =
 						NameMap.add id [s_id] s_table
 					) 
 					tail
-				| _ -> raise (Failure("Need an Compound Stmt"))
-			| _ -> raise (Failure("Add State Error")) 
+				| _ -> raise (Failure("Need an Compound Stmt")) 
 	in add_state s_table state_list
 
 (*add class to the class table*)
@@ -323,9 +460,7 @@ and add_c_table v_table c_table s_table id stmt_list level =
 											NameMap.add id [(id2, t2)] c_table
 										) 
 										list1 tl2
-								| _ -> raise(Failure("Error")) 
 					in add_to_table c_table (NameMap.bindings v_table) (NameMap.bindings v_table')
-				| _ -> raise(Failure("Statement Error"))
 				)
 			| FuncDecl(arg1, arg2, arg3) ->
 				(
@@ -367,9 +502,7 @@ and add_c_table v_table c_table s_table id stmt_list level =
 											NameMap.add id [(id2, t2)] c_table
 										) 
 										list1 tl2
-								| _ -> raise(Failure("Error")) 
 					in add_to_table c_table (NameMap.bindings v_table) (NameMap.bindings v_table')
-				| _ -> raise(Failure("Statement Error"))
 				)
 			| _ -> add_class v_table c_table tail 
 	in add_class v_table c_table stmt_list
