@@ -121,6 +121,7 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 									(v_table, c_table, s_table)
 								else
 									raise(Failure("Function Return Type Mismatch"))
+						|	_ -> raise(Failure(name^" is not a Function Type"))
 					else
 						find_func_type tail
 		in find_func_type level
@@ -162,8 +163,11 @@ and check_expr v_table c_table s_table env level expr =
 		if env = 4 then
 			match level with
 			| hd1::(hd2::tail) ->
+				(
 				match hd2 with
-				| (_, id) -> Class(id) 
+				| (_, id) -> Class(id)
+				)
+			| _ -> raise(Failure("Unknown Error")) 
 		else
 			raise(Failure("Cannot Use This Operator Heres"))
 	| UnaryOp(op, expr) ->
@@ -266,6 +270,7 @@ and check_expr v_table c_table s_table env level expr =
 						)	
 					| _ -> raise(Failure("Assignment Fails"))
 					)
+				| _ -> raise(Failure("Assignment Error"))	
 			in check_left_type e1			
 		| Trans ->
 			(
@@ -310,6 +315,7 @@ and check_expr v_table c_table s_table env level expr =
 		| LDot -> Void(*???????????*)
 		)
 	| FuncCall(e1, expr_list) ->
+		(
 		match e1 with
 		| Id(id) ->
 			if NameMap.mem id v_table then
@@ -325,9 +331,11 @@ and check_expr v_table c_table s_table env level expr =
 								raise(Failure("Function Parameter Type Mismatch"))
 						| _ -> raise(Failure("Function Parameter Mismatch"))
 					in check_param type_list expr_list
+				| _ -> raise(Failure(id^" is not an Function"))
 			else
 				raise(Failure("Cannot Find Function "^id))
 		| _ -> raise(Failure("Function Call Format Error"))
+		)
 	| NoExpr -> Void
 
 (*find the state of the object in state table*)
@@ -385,8 +393,10 @@ and check_state v_table c_table s_table id state_list level =
 			| (s_id, c_stmt) -> 
 				match c_stmt with
 				| CompStmt(t) -> 
+					(
 					match check_stmt 4 ((4, "")::level) (v_table, c_table, s_table) c_stmt with
 					| (_,_,_) -> check_each_state tail
+					)
 				| _ -> raise (Failure("Need an cstmt")) 
 	in check_each_state state_list
 
@@ -440,6 +450,7 @@ and add_c_table v_table c_table s_table id stmt_list level =
 							if hd1 = hd2 then
 								add_to_table c_table tl1 tl2 
 							else
+								(
 								match (hd1, hd2) with
 								| ((id1, (t1, l1)), (id2, (t2, l2))) ->
 									if id1 = id2 then
@@ -460,6 +471,8 @@ and add_c_table v_table c_table s_table id stmt_list level =
 											NameMap.add id [(id2, t2)] c_table
 										) 
 										list1 tl2
+								)
+						| _ -> raise(Failure("Unknown Error"))
 					in add_to_table c_table (NameMap.bindings v_table) (NameMap.bindings v_table')
 				)
 			| FuncDecl(arg1, arg2, arg3) ->
@@ -482,6 +495,7 @@ and add_c_table v_table c_table s_table id stmt_list level =
 							if hd1 = hd2 then
 								add_to_table c_table tl1 tl2 
 							else
+								(
 								match (hd1, hd2) with
 								| ((id1, (t1, l1)), (id2, (t2, l2))) ->
 									if id1 = id2 then
@@ -502,6 +516,8 @@ and add_c_table v_table c_table s_table id stmt_list level =
 											NameMap.add id [(id2, t2)] c_table
 										) 
 										list1 tl2
+								)
+						| _ -> raise(Failure("Unknown Error"))		
 					in add_to_table c_table (NameMap.bindings v_table) (NameMap.bindings v_table')
 				)
 			| _ -> add_class v_table c_table tail 
