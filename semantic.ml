@@ -156,7 +156,16 @@ and check_expr v_table c_table s_table env level expr =
 		| CharLit(t) ->  Char
 		| BoolLit(t) -> Bool
 		| ObjectLit(object_literal) -> object_literal
-		| ListLit(type_spec, expr_list) -> ListType(type_spec)
+		| ListLit(type_spec, expr_list) -> 
+			let rec check_expr_list list =
+				match list with
+				| [] -> ListType(type_spec)
+				| head::tail ->
+					if type_compatable type_spec (check_expr v_table c_table s_table env level head) then
+						check_expr_list tail
+					else
+						raise(Failure("List Element Type Mismatch"))
+			in check_expr_list expr_list
 		)
 	| FuncLit(type_spec, param_list, stmt) ->
 		let rec get_func_param type_spec_list list v_table' = 
@@ -341,7 +350,19 @@ and check_expr v_table c_table s_table env level expr =
 			| (ListType(list_type), FuncCall(name, e_list)) ->
 				(
 				match (name, e_list) with
-				| (Id("insert"), [e1; e2]) -> Void(*???????????????????????????????*)
+				| (Id("insert"), [e1; e2]) | (Id("append"), [e1; e2]) ->
+					(
+    			match ((check_expr v_table c_table s_table env level e1), (check_expr v_table c_table s_table env level e2)) with
+    			| (Int, t) -> if t = list_type then Void else raise(Failure("Function Argument Type Mismatch"))
+    			| _ -> raise(Failure("Function Argument Type Mismatch"))
+					)
+				|	(Id("remove"), [e1]) ->
+					(
+					match (check_expr v_table c_table s_table env level e1) with
+					| Int -> list_type
+					| _ -> raise(Failure("Function Argument Type Mismatch"))
+					)
+				| _ -> raise(Failure("No Such Function"))
 				)
 			| _ -> raise(Failure("LDot Operation Error"))
 			)
