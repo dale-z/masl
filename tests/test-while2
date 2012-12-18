@@ -1,0 +1,8 @@
+int i, j;
+
+while (i * j < 300)
+{
+	i = i + 1;
+	j = j + i;
+	//if(i == 10)break;
+}
