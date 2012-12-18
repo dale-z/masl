@@ -74,7 +74,7 @@ and translate_stmt indent node = match node with
     (List.fold_left
         (fun acc stmt -> acc ^ "\npublic " ^ (translate_stmt "  " stmt))
         "" stmts
-    ) ^ "}\n"
+    ) ^ "\npublic String __curState = null;\n" ^ "}\n"
   (*| ObjectDecl(id, expr) -> indent ^ "objectdecl\n"*)
 	(* expr_stmt *)
   | Expr(expr) -> indent ^ translate_expr expr ^ ";\n"
@@ -146,29 +146,33 @@ and translate_expr node =
 		end ^
 		translate_expr expr ^ ")";
 	| BinaryOp(expr1, op, expr2) ->
-		"(" ^ (translate_expr expr1) ^
-		begin
-			match op with
-			| Plus -> "+"
-			| Minus -> "-"
-			| Mult -> "*"
-			| Div -> "/"
-			| Mod -> "%"
-			| And -> "&&"
-			| Or -> "||"
-			| Gt -> ">"
-			| Ge -> ">="
-			| Eq -> "=="
-			| Neq -> "!=" 
-			| Le -> "<="
-			| Lt -> "<"
-			| Assign -> "="
-			| Dot -> "."
-			| At -> "#At#"
-			| Trans -> "#Trans#"
-			| _ -> ""
-		end ^
-		(translate_expr expr2) ^ ")"
+    begin
+      match op with
+      | At -> (translate_expr expr1) ^ ".equals(\"" ^ (translate_expr expr2) ^ "\")"
+      | Trans -> (translate_expr expr1) ^ ".__curState = \"" ^ (translate_expr expr2) ^ "\""
+      | _ -> 
+			"(" ^ (translate_expr expr1) ^
+			begin
+				match op with
+				| Plus -> "+"
+				| Minus -> "-"
+				| Mult -> "*"
+				| Div -> "/"
+				| Mod -> "%"
+				| And -> "&&"
+				| Or -> "||"
+				| Gt -> ">"
+				| Ge -> ">="
+				| Eq -> "=="
+				| Neq -> "!=" 
+				| Le -> "<="
+				| Lt -> "<"
+				| Assign -> "="
+				| Dot -> "."
+				| _ -> ""
+			end ^
+			(translate_expr expr2) ^ ")"
+    end
 	| FuncCall(func, args) -> (translate_expr func) ^ ".invoke(" ^ (translate_arg_list args) ^ ");"
 	| NoExpr -> ""
 and translate_decl type_spec decl = match decl with
