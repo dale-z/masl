@@ -127,7 +127,7 @@ and translate_expr node =
 	| FuncLit(type_spec, param_list, comp_stmt) -> "new MaslFunction<" ^ (translate_type_spec type_spec) ^ 
         ">() {\n@Override\npublic " ^ (translate_type_spec type_spec) ^
         " invoke(Object... args) {\n" ^
-        let idxs = List.mapi (fun idx ele -> idx) param_list in
+        let idxs = List.rev (List.fold_left (fun acc para -> (List.length acc)::acc) [] param_list) in
         (List.fold_left2
           (fun acc param idx -> acc ^ (translate_type_spec (fst param)) ^ " " ^ (snd param) ^ 
           " = (" ^ (translate_type_spec (fst param) ^ ") args[" ^ (string_of_int idx) ^ "];\n")
