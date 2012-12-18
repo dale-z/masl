@@ -132,7 +132,7 @@ and translate_expr node =
   		match lit with
   		| IntLit(lit) -> string_of_int lit
   		| DoubleLit(lit) -> string_of_float lit
-  		| CharLit(lit) -> Char.escaped lit
+  		| CharLit(lit) -> "'" ^ (Char.escaped lit) ^ "'"
   		| BoolLit(lit) -> string_of_bool lit
 		| ObjectLit(lit) -> "new " ^ (translate_type_spec lit) ^ "()"
 		| ListLit(type_spec, exprs) -> "new MaslList<" ^ (translate_type_spec_obj type_spec) ^ 

@@ -68,10 +68,14 @@ class Flasher {
 	state State1 {
 		x = x + offset;
 		this->State2;
+		printList([class Flasher]{this});
+		printChar('\n');
 	}
 	state State2 {
 		x = x - offset;
 		this->State1;
+		printList([class Flasher]{this});
+		printChar('\n');
 	}
 
 	int offset = 1;
@@ -80,13 +84,25 @@ class Flasher {
 class Flasher f1 = class Flasher();
 f1.x = 4;
 f1.y = 1;
-f1.r = 1;
+f1.r = 1.0;
 f1->State1;
 [class Flasher] list4 = [class Flasher]{f1};
 class Flasher f2 = class Flasher();
 f2.x = 4;
 f2.y = 3;
-f2.b = 1;
+f2.b = 1.0;
 f2->State2;
 list4:.append(f2);
+printList(list4);
+printStr("Hello World!\n");
+printList("Hello World!\n");
+printInt(f1.x);
+printStr("\n");
+printDouble(f1.r);
+printStr("\n");
+char ccc = 'c';
+printChar(ccc);
+printStr("\n");
+printBool(true);
+printStr("\n");
 run(list4);

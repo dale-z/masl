@@ -23,7 +23,7 @@ public abstract class MaslSimulation extends JFrame {
 		for(int i = 0; i < __list.size(); ++i) {
 			
 			MaslClass agent = __list.get(i);
-			g.setColor(new Color(agent.r, agent.g, agent.b));
+			g.setColor(new Color((float)agent.r, (float)agent.g, (float)agent.b));
 			int x = agent.x;
 			int y = agent.y;
 			g.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
@@ -69,6 +69,72 @@ public abstract class MaslSimulation extends JFrame {
 			// the arguments into types specified by the MASL function.
 			MaslList<MaslClass> list = (MaslList<MaslClass>) args[0];
 			_run(list);
+			return null;
+		}	
+	};
+
+	// Print a char
+	public MaslFunction<Void> printChar = new MaslFunction<Void>(){
+		public Void invoke(Object... args) {
+			Character o = (Character) args[0];
+			System.out.print(o);
+			return null;
+		}	
+	};
+	// Print a int
+	public MaslFunction<Void> printInt = new MaslFunction<Void>(){
+		public Void invoke(Object... args) {
+			Integer o = (Integer) args[0];
+			System.out.print(o);
+			return null;
+		}	
+	};
+	// Print a double
+	public MaslFunction<Void> printDouble = new MaslFunction<Void>(){
+		public Void invoke(Object... args) {
+			Double o = (Double) args[0];
+			System.out.print(o);
+			return null;
+		}	
+	};
+	// Print a boolean
+	public MaslFunction<Void> printBool = new MaslFunction<Void>(){
+		public Void invoke(Object... args) {
+			Boolean o = (Boolean) args[0];
+			System.out.print(o);
+			return null;
+		}	
+	};
+	// Print a MaslObject
+	/*public MaslFunction<Void> printObj = new MaslFunction<Void> {
+		public Void invoke(Object... args) {
+			MaslObject o = (MaslObject) args[0];
+			System.out.print(o);
+		}	
+	};*/
+	// Print a MaslList
+	public MaslFunction<Void> printList = new MaslFunction<Void>(){
+		public Void invoke(Object... args) {
+			MaslList<? extends Object> list = (MaslList<? extends Object>) args[0];
+			String toPrint = "[";
+			for(Object o : list) {
+				toPrint += o;
+				toPrint += ";";
+			}
+			toPrint += "]";
+			System.out.print(toPrint);
+			return null;
+		}	
+	};
+	// Print a String
+	public MaslFunction<Void> printStr = new MaslFunction<Void>(){
+		public Void invoke(Object... args) {
+			MaslList<? extends Object> list = (MaslList<? extends Object>) args[0];
+			String toPrint = "";
+			for(Object o : list) {
+				toPrint += o;
+			}
+			System.out.print(toPrint);
 			return null;
 		}	
 	};
