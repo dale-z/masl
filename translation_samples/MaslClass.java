@@ -8,4 +8,10 @@ abstract public class MaslClass {
 	// obj._curState = "state_n";
 	public String __curState;
 	public MaslSimulation __simulation;
+	
+	public int x;
+	public int y;
+	public double r;
+	public double g;
+	public double b;
 }
