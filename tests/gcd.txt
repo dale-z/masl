@@ -1,0 +1,19 @@
+class c1{
+	state gcd{
+		if(a == b){
+			ans = a;
+		}else{
+			if(a > b){
+				a = a - b;
+				this->gcd;
+			}
+			else{
+				b = b - a;
+				this->gcd;
+			}
+		}
+	}
+	int a = 16;
+	int b = 6;
+	int ans;
+}

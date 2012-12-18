@@ -20,7 +20,16 @@ end)
 
 let rec check_semantic program =	 
 	match program with
-	| Program(stmt_list) -> List.fold_left (check_stmt 0 [(0,"")]) (NameMap.empty, NameMap.empty, NameMap.empty) stmt_list
+	| Program(stmt_list) -> List.fold_left (check_stmt 0 [(0,"")]) 
+	(
+	List.fold_right2
+	(fun id t -> NameMap.add id t) 
+	["printInt"; "printDouble"; "printChar"; "printBool"; "printStr"] 
+	[(FuncType(Void,[Int]), [(0,"")]); (FuncType(Void,[Double]), [(0,"")]); (FuncType(Void,[Char]), [(0,"")]); (FuncType(Void,[Bool]), [(0,"")]); (FuncType(Void,[ListType(Char)]), [(0,"")])] 
+	NameMap.empty, 
+	NameMap.empty, NameMap.empty
+	) 
+	stmt_list
 
 (*check statements*)
 
@@ -360,6 +369,30 @@ and check_expr v_table c_table s_table env level expr =
 					(
 					match (check_expr v_table c_table s_table env level e1) with
 					| Int -> list_type
+					| _ -> raise(Failure("Function Argument Type Mismatch"))
+					)
+				| (Id("filter"), [e1]) ->
+					(
+					match (check_expr v_table c_table s_table env level e1) with
+					| FuncType(return_type, arg_list) ->
+						(
+						match arg_list with
+						| t::[] ->
+							if t = list_type && Bool = return_type then ListType(list_type) else raise(Failure("Function Argument Type Mismatch"))
+						| _ -> 	raise(Failure("Function Argument Mismatch"))
+						)
+					| _ -> raise(Failure("Function Argument Type Mismatch"))
+					)
+				| (Id("count"), [e1]) ->
+					(
+					match (check_expr v_table c_table s_table env level e1) with
+					| FuncType(return_type, arg_list) ->
+						(
+						match arg_list with
+						| t::[] ->
+							if t = list_type && Bool = return_type then Int else raise(Failure("Function Argument Type Mismatch"))
+						| _ -> 	raise(Failure("Function Argument Mismatch"))
+						)
 					| _ -> raise(Failure("Function Argument Type Mismatch"))
 					)
 				| _ -> raise(Failure("No Such Function"))
