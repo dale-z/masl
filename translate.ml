@@ -145,13 +145,20 @@ and translate_expr node =
 			| _ -> ""
 		end ^
 		translate_expr expr ^ ")";
-	| BinaryOp(expr1, op, expr2) ->
+	| BinaryOp(expr1, op, expr2) -> "(" ^ 
     begin
       match op with
       | At -> (translate_expr expr1) ^ ".equals(\"" ^ (translate_expr expr2) ^ "\")"
       | Trans -> (translate_expr expr1) ^ ".__curState = \"" ^ (translate_expr expr2) ^ "\""
+      | Index -> (translate_expr expr1) ^ ".get(" ^ (translate_expr expr2) ^ ")"
+			| LDot -> (translate_expr expr1) ^ "." ^ (
+        begin 
+          match expr2 with 
+          | FuncCall(func, args) -> (translate_expr func) ^ "(" ^ (translate_arg_list args) ^ ")"
+          | _ -> "#Impossible#" (*Impossible, used to suppress warning*)
+        end)
       | _ -> 
-			"(" ^ (translate_expr expr1) ^
+			(translate_expr expr1) ^
 			begin
 				match op with
 				| Plus -> "+"
@@ -171,9 +178,9 @@ and translate_expr node =
 				| Dot -> "."
 				| _ -> ""
 			end ^
-			(translate_expr expr2) ^ ")"
-    end
-	| FuncCall(func, args) -> (translate_expr func) ^ ".invoke(" ^ (translate_arg_list args) ^ ");"
+			(translate_expr expr2)
+    end ^ ")"
+	| FuncCall(func, args) -> (translate_expr func) ^ ".invoke(" ^ (translate_arg_list args) ^ ")"
 	| NoExpr -> ""
 and translate_decl type_spec decl = match decl with
 	  BasicInitDefault(id) ->
@@ -188,7 +195,7 @@ and translate_decl type_spec decl = match decl with
     	| Class(id) -> "new " ^ id ^ "()"
     	| ListType(type_spec) -> "new MaslList<" ^ (translate_type_spec type_spec) ^ ">();"
     	(*| Object -> "#ObjectDefaultValue#"*)
-    	| Void -> "#VoidDefaultValue#"
+    	| Void -> "void"
 		end
   | BasicInitAssign(id, expr) ->
 		id ^ "=" ^ translate_expr expr
