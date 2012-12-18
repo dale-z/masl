@@ -1,0 +1,25 @@
+
+class People
+{
+	state Rich 
+	{
+		if(money - 1000000 < 0.1) this->Poor;
+	}
+
+	state Poor 
+	{
+		if(neighborRicherCount() > 3) 
+			money = money + 5000;
+		if(money - 1000000 > 0.1) this->Rich;
+	}
+
+	double money;
+		
+	int neighborRicherCount()
+	{
+		return 3;
+	}
+	
+	int age;
+	char sex;
+}

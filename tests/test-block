@@ -1,0 +1,27 @@
+
+int a;
+
+for (i = 0; i < 10; i = i + 1)
+{
+	int tmp;
+	tmp = tmp + 1;
+}
+
+tmp = 1;
+
+
+
+
+
+
+
+//
+int a;
+
+
+{
+	int tmp;
+	tmp = tmp + 1;
+}
+
+tmp = 1;
