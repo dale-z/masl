@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 // Represents a MASL list.
 class MaslList<T> implements Iterable<T> {
@@ -50,6 +51,14 @@ class MaslList<T> implements Iterable<T> {
 			if(f.invoke(e)) ++n;
 
 		return n;
+	}
+
+	public int size() {
+		return _list.size();
+	}
+
+	public String toString() {
+		return _list.toString();
 	}
 
 	private ArrayList<T> _list;

@@ -1,6 +1,5 @@
 import java.awt.Color;
 import java.awt.Graphics;
-
 import javax.swing.JFrame;
 
 // A MASL program is called a simulation. It will be translated into
@@ -17,6 +16,8 @@ public abstract class MaslSimulation extends JFrame {
 //	ArrayList<MaslClass> __container;
 	
 	public void paint(Graphics g) {
+
+		g.clearRect(0, 0, nx*cellSize, ny*cellSize);
 		
 		// Draw all the agents.
 		for(int i = 0; i < __list.size(); ++i) {
@@ -28,8 +29,8 @@ public abstract class MaslSimulation extends JFrame {
 			g.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
 		}
 	}
-	
-	public void run(MaslList<MaslClass> list) {
+
+	public void _run(MaslList<MaslClass> list) {
 
 		__list = list;
 		
@@ -59,6 +60,18 @@ public abstract class MaslSimulation extends JFrame {
 			}
 		}
 	}
+
+	// Wrapper for run function
+	public MaslFunction<Void> run = new MaslFunction<Void>() {
+		public Void invoke(Object... args) {
+
+			// The first few lines of the overridden 'invoke' method convert
+			// the arguments into types specified by the MASL function.
+			MaslList<MaslClass> list = (MaslList<MaslClass>) args[0];
+			_run(list);
+			return null;
+		}	
+	};
 	
 	// The number of cells in a row.
 	public int nx = 10;
@@ -67,7 +80,7 @@ public abstract class MaslSimulation extends JFrame {
 	// The size of a cell.
 	public int cellSize = 30;
 	// The number of milliseconds to be paused between two steps. 
-	public int interval = 30;
+	public int interval = 1000;
 	
 	private MaslList<MaslClass> __list;
 }

@@ -35,7 +35,8 @@ let rec translate sim_name node =
     						| ClassDecl(_, _, _) -> false
 								| FuncDecl(_, _, _) -> false
     						| _ -> true) stmts)) ^
-				"  }\n" ^
+				"  }\npublic static void main(String[] args) {\n" ^ 
+            sim_name ^ " sim = new " ^ sim_name ^ "();\nsim.init();}\n" ^
 				"}\n"
 and translate_type_spec_obj node = match node with
 	| Int -> "Integer"
@@ -48,7 +49,7 @@ and translate_type_spec_obj node = match node with
 	| Class(id) -> id
 	(*| Object -> "object"*)
   | ListType(type_spec) -> "MaslList<" ^ (translate_type_spec_obj type_spec) ^ ">"
-	| Void -> "void"
+	| Void -> "Void"
 and translate_type_spec node = match node with
 	| Int -> "int"
 	| Double -> "double"
@@ -146,7 +147,7 @@ and translate_expr node =
           )
           "" param_list idxs
         ) ^
-        (translate_stmt "  " comp_stmt) ^ "}\n}\n"
+        (translate_stmt "  " comp_stmt) ^ (match type_spec with Void -> "return null;" | _ -> "") ^ "}\n}\n"
 	(*| ObjectLit(lit) -> "ObjectLit"*)
 	| This -> "this"
 	| UnaryOp(op, expr) ->

@@ -1,0 +1,92 @@
+class Class1 {
+
+	state State1 {
+		this->State2;
+	}
+
+	state State2 {
+		mem2:.append(3);
+		mem1 = mem2:[0];
+		mem2:.insert(0, 5);
+		this->State1;
+	}
+
+	double mem1;
+	[int] mem2 = [int]{1, 2};
+
+	int mem3(int a, int b) {
+		if (a < b) {
+			return a;
+		} else {
+			return b;
+		}
+	}
+}
+
+int a, b = 3, d, e;
+d = 1;
+e = 2;
+class Class1 c = class Class1();
+[int] list = [int]{1, 5+a, (a-b)*c.mem3(d, e)};
+a = list:.get(0);
+list:.append(500);
+list:.set(2, 3);
+e = list:[1];
+
+for (int g : list) {
+	g = g + d;
+}
+
+[class Class1] list2 = [class Class1]{c, class Class1()};
+[(int):class Class1] list3 = [(int):class Class1]{function1};
+(int):class Class1 h = function2(list2, list3);
+
+class Class1 function1(int d) {
+	class Class1 c = class Class1();
+	c.mem1 = d;
+	return c;
+}
+
+(int):class Class1 function2([class Class1] list, [(int):class Class1] list2) {
+	list:.append(class Class1());
+	list2:.append(function1);
+	fun((int):class Class1) f = list2:.get(0);
+	bool b = true;
+	if(b && list:[0]@state1) {
+		list:[0]->state2;
+		b = (list:.get(0))@state1;
+	}
+
+	for ((int):class Class1 g : list2) {
+		class Class1 c = f(10);
+	}
+
+	return f;
+}
+
+class Flasher {
+	state State1 {
+		x = x + offset;
+		this->State2;
+	}
+	state State2 {
+		x = x - offset;
+		this->State1;
+	}
+
+	int offset = 1;
+}
+
+class Flasher f1 = class Flasher();
+f1.x = 4;
+f1.y = 1;
+f1.r = 1;
+f1->State1;
+[class Flasher] list4 = [class Flasher]{f1};
+class Flasher f2 = class Flasher();
+f2.x = 4;
+f2.y = 3;
+f2.b = 1;
+f2->State2;
+list4:.append(f2);
+run(list4);
