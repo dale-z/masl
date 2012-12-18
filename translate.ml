@@ -98,7 +98,9 @@ and translate_stmt indent node = match node with
 		translate_expr update ^ ") {\n" ^
 		translate_stmt ("  " ^ indent) body ^
 		indent ^ "}\n"
-  | ForEach(type_spec, iter, container, body) -> indent ^ "#ForEach#\n"
+  | ForEach(type_spec, iter, container, body) -> indent ^ "for(" ^ 
+    (translate_type_spec type_spec) ^ " " ^ iter ^ ":" ^ 
+    (translate_expr container) ^ ") {\n" ^ (translate_stmt ("  " ^ indent) body) ^ "}\n"
   | While(pred, body) -> indent ^ "while(" ^ 
 		translate_expr pred ^ ") {\n" ^
 		translate_stmt ("  " ^ indent) body ^ "}\n"
