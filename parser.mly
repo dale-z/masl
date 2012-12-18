@@ -108,6 +108,7 @@ type_specifier:
 	| DOUBLE { Double }
 	| CHAR { Char }
 	| BOOL { Bool }
+	| VOID { Void }
 	| LPAREN param_type_list RPAREN COLON type_specifier { FuncType($5, $2) }
 	| CLASS ID { Class($2) }
 	| LSQBRA type_specifier RSQBRA { ListType($2) }
