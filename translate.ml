@@ -37,17 +37,29 @@ let rec translate sim_name node =
     						| _ -> true) stmts)) ^
 				"  }\n" ^
 				"}\n"
-and translate_type_spec node = match node with
+and translate_type_spec_obj node = match node with
 	| Int -> "Integer"
 	| Double -> "Double"
 	| Bool -> "Boolean"
 	| Char -> "Character"
 	| FuncType(return_type, param_types) -> "MaslFunction<" ^ 
-    (translate_type_spec return_type) ^ ">"
+    (translate_type_spec_obj return_type) ^ ">"
 	(*| Class(id) -> "class " ^ id*)
 	| Class(id) -> id
 	(*| Object -> "object"*)
-  | ListType(type_spec) -> "MaslList<" ^ (translate_type_spec type_spec) ^ ">"
+  | ListType(type_spec) -> "MaslList<" ^ (translate_type_spec_obj type_spec) ^ ">"
+	| Void -> "void"
+and translate_type_spec node = match node with
+	| Int -> "int"
+	| Double -> "double"
+	| Bool -> "boolean"
+	| Char -> "char"
+	| FuncType(return_type, param_types) -> "MaslFunction<" ^ 
+    (translate_type_spec_obj return_type) ^ ">"
+	(*| Class(id) -> "class " ^ id*)
+	| Class(id) -> id
+	(*| Object -> "object"*)
+  | ListType(type_spec) -> "MaslList<" ^ (translate_type_spec_obj type_spec) ^ ">"
 	| Void -> "void"
 and translate_stmt indent node = match node with
 	(* decl_stmt *)
@@ -65,7 +77,7 @@ and translate_stmt indent node = match node with
       | FuncType(rt,_) -> rt 
       | _ -> Void (*Impossible, used to suppress warning*)
     end 
-    in "MaslFunction<" ^ (translate_type_spec return_type) ^ "> " ^ 
+    in "MaslFunction<" ^ (translate_type_spec_obj return_type) ^ "> " ^ 
     id ^ "=" ^ (translate_expr expr) ^ ";\n"
 	| ClassDecl(id, states, stmts) -> indent ^ "public class " ^ 
     id ^ " extends MaslClass {\n" ^ (generate_state_update states) ^
@@ -121,16 +133,16 @@ and translate_expr node =
   		| CharLit(lit) -> Char.escaped lit
   		| BoolLit(lit) -> string_of_bool lit
 		| ObjectLit(lit) -> "new " ^ (translate_type_spec lit) ^ "()"
-		| ListLit(type_spec, exprs) -> "new MaslList<" ^ (translate_type_spec type_spec) ^ 
+		| ListLit(type_spec, exprs) -> "new MaslList<" ^ (translate_type_spec_obj type_spec) ^ 
       ">(" ^ (translate_arg_list exprs) ^ ")"
 		end
-	| FuncLit(type_spec, param_list, comp_stmt) -> "new MaslFunction<" ^ (translate_type_spec type_spec) ^ 
-        ">() {\n@Override\npublic " ^ (translate_type_spec type_spec) ^
+	| FuncLit(type_spec, param_list, comp_stmt) -> "new MaslFunction<" ^ (translate_type_spec_obj type_spec) ^ 
+        ">() {\n@Override\npublic " ^ (translate_type_spec_obj type_spec) ^
         " invoke(Object... args) {\n" ^
         let idxs = List.rev (List.fold_left (fun acc para -> (List.length acc)::acc) [] param_list) in
         (List.fold_left2
           (fun acc param idx -> acc ^ (translate_type_spec (fst param)) ^ " " ^ (snd param) ^ 
-          " = (" ^ (translate_type_spec (fst param) ^ ") args[" ^ (string_of_int idx) ^ "];\n")
+          " = (" ^ (translate_type_spec_obj (fst param) ^ ") args[" ^ (string_of_int idx) ^ "];\n")
           )
           "" param_list idxs
         ) ^
@@ -195,7 +207,7 @@ and translate_decl type_spec decl = match decl with
     	| Char -> "'\\0'"
     	| FuncType(return_type, param_types) -> "null"
     	| Class(id) -> "new " ^ id ^ "()"
-    	| ListType(type_spec) -> "new MaslList<" ^ (translate_type_spec type_spec) ^ ">();"
+    	| ListType(type_spec) -> "new MaslList<" ^ (translate_type_spec_obj type_spec) ^ ">();"
     	(*| Object -> "#ObjectDefaultValue#"*)
     	| Void -> "void"
 		end
