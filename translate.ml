@@ -66,7 +66,7 @@ and translate_stmt indent node = match node with
       | _ -> Void (*Impossible, used to suppress warning*)
     end 
     in "MaslFunction<" ^ (translate_type_spec return_type) ^ "> " ^ 
-    id ^ "=" ^ (translate_expr expr)
+    id ^ "=" ^ (translate_expr expr) ^ ";\n"
 	| ClassDecl(id, states, stmts) -> indent ^ "public class " ^ 
     id ^ " extends MaslClass {\n" ^ (generate_state_update states) ^
     (translate_states states) ^
@@ -132,11 +132,11 @@ and translate_expr node =
           )
           "" param_list idxs
         ) ^
-        (translate_stmt "  " comp_stmt)
+        (translate_stmt "  " comp_stmt) ^ "}\n}\n"
 	(*| ObjectLit(lit) -> "ObjectLit"*)
 	| This -> "this"
 	| UnaryOp(op, expr) ->
-		"(" ^
+		(*"(" ^*)
 		begin
 			match op with
 			| Plus -> "+"
@@ -144,8 +144,8 @@ and translate_expr node =
 			| Not -> "!"
 			| _ -> ""
 		end ^
-		translate_expr expr ^ ")";
-	| BinaryOp(expr1, op, expr2) -> "(" ^ 
+		translate_expr expr (*^ ")"*)
+	| BinaryOp(expr1, op, expr2) -> (*"(" ^*) 
     begin
       match op with
       | At -> (translate_expr expr1) ^ ".equals(\"" ^ (translate_expr expr2) ^ "\")"
@@ -179,7 +179,7 @@ and translate_expr node =
 				| _ -> ""
 			end ^
 			(translate_expr expr2)
-    end ^ ")"
+    end (*^ ")"*)
 	| FuncCall(func, args) -> (translate_expr func) ^ ".invoke(" ^ (translate_arg_list args) ^ ")"
 	| NoExpr -> ""
 and translate_decl type_spec decl = match decl with
