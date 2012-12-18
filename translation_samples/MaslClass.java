@@ -11,7 +11,7 @@ abstract public class MaslClass {
 	
 	public int x;
 	public int y;
-	public double r;
-	public double g;
-	public double b;
+	public float r;
+	public float g;
+	public float b;
 }
