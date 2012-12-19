@@ -27,6 +27,8 @@ public abstract class MaslSimulation extends JFrame {
 			int x = agent.x;
 			int y = agent.y;
 			g.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+			g.setColor(new Color(0.0f, 0.0f, 0.0f));
+			g.drawRect(x * cellSize, y * cellSize, cellSize, cellSize);
 		}
 	}
 

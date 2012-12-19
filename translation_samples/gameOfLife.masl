@@ -1,0 +1,118 @@
+// Define the cell in the game as a class.
+class Cell {
+
+	// If the cell is alive, it will only live on with 2 or 3 live neighbors.
+	state Live {
+		r = 1.0;
+		b = 0.0;
+		liveInLastRound = true;
+		int liveNeighborsNum = countLiveNeighbors(neighbors);
+		if(liveNeighborsNum < 2 || liveNeighborsNum > 3) {
+			r = 0.0;
+			b = 1.0;
+			this->Dead;
+		}
+	}
+
+	// If the cell is dead, only when exactly 3 live neighbors will render it alive.
+	state Dead {
+		r = 0.0;
+		b = 1.0;
+		liveInLastRound = false;
+		if(countLiveNeighbors(neighbors) == 3) {
+			r = 1.0;
+			b = 0.0;
+			this->Live;
+		}
+	}
+
+	// A function to used to inspect whether a cell is alive or not
+	bool isLive(class Cell c) {
+		return c.liveInLastRound;
+	}
+
+	// State in last round
+	bool liveInLastRound = false;
+
+	// A routine counting the number of alive neighbors.
+	int countLiveNeighbors([class Cell] n) {
+		return n:.count(isLive);
+	}
+
+	// All neighbors of this cell
+	[class Cell] neighbors;
+}
+
+// Container of all cells
+[class Cell] container;
+
+// Matrix representation of all cells above
+[[class Cell]] matrix;
+
+// Initialize cells
+for(int i = 0; i < nx; i = i + 1) {
+	[class Cell] row;
+	for (int j = 0; j < ny; j = j + 1) {
+		class Cell c = class Cell();
+		c.x = i;
+		c.y = j;
+		c.b = 1.0;
+		c->Dead;
+		container:.append(c);
+		row:.append(c);
+	}
+	matrix:.append(row);
+}
+
+// Initialize neighbors of each cell
+for(class Cell c : container) {
+	int x = c.x;
+	int y = c.y;
+
+	// Index of all neighbors
+	[[int]] neighborIdx = [[int]]{
+	[int]{x - 1, y - 1}, [int]{x - 1, y}, [int]{x - 1, y + 1},
+	[int]{x, y - 1}, [int]{x, y + 1},
+	[int]{x + 1, y - 1}, [int]{x + 1, y}, [int]{x + 1, y + 1}
+	};
+
+	// Handle index overflow and underflow, and 
+	// put the corresponding cell into current cell's neighbor list
+	for([int] list : neighborIdx) {
+		if(list:[0] < 0) {
+			list:.set(0, list:[0] + nx);
+		} else if (list:[0] > nx - 1) {
+			list:.set(0, nx - list:[0]);
+		}
+		if(list:[1] < 0) {
+			list:.set(1, list:[1] + ny);
+		} else if (list:[1] > ny - 1) {
+			list:.set(1, ny - list:[1]);
+		}
+		c.neighbors:.append(matrix:[list:[0]]:[list:[1]]);
+	}
+}
+
+// Create initial pattern
+matrix:[0]:[0]->Live;
+matrix:[0]:[0].liveInLastRound = true;
+matrix:[0]:[0].r = 1.0;
+matrix:[0]:[0].b = 0.0;
+matrix:[2]:[0]->Live;
+matrix:[2]:[0].liveInLastRound = true;
+matrix:[2]:[0].r = 1.0;
+matrix:[2]:[0].b = 0.0;
+matrix:[1]:[1]->Live;
+matrix:[1]:[1].liveInLastRound = true;
+matrix:[1]:[1].r = 1.0;
+matrix:[1]:[1].b = 0.0;
+matrix:[2]:[1]->Live;
+matrix:[2]:[1].liveInLastRound = true;
+matrix:[2]:[1].r = 1.0;
+matrix:[2]:[1].b = 0.0;
+matrix:[1]:[2]->Live;
+matrix:[1]:[2].liveInLastRound = true;
+matrix:[1]:[2].r = 1.0;
+matrix:[1]:[2].b = 0.0;
+
+run(container);
