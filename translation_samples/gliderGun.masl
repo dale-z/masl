@@ -1,0 +1,122 @@
+// Define the cell in the game as a class.
+class Cell {
+
+
+	// If the cell is alive, it will only live on with 2 or 3 live neighbors.
+	state Live {
+		r = 0.0;
+		g = 0.0;
+		b = 0.0;
+		lastLive = live;
+		live = true;
+		int liveNeighborsNum = countLiveNeighbors(neighbors);
+		if(liveNeighborsNum < 2 || liveNeighborsNum > 3) {
+			r = 1.0;
+			g = 1.0;
+			b = 1.0;
+			this->Dead;
+		}
+	}
+
+	// If the cell is dead, only when exactly 3 live neighbors will render it alive.
+	state Dead {
+		r = 1.0;
+		g = 1.0;
+		b = 1.0;
+		lastLive = live;
+		live = false;
+		if(countLiveNeighbors(neighbors) == 3) {
+			r = 0.0;
+			g = 0.0;
+			b = 0.0;
+			this->Live;
+		}
+	}
+
+	// All neighbors of this cell
+	[class Cell] neighbors;
+
+	// State in last round
+	bool lastLive = false;
+	bool live = false;
+
+	// A function to used to inspect whether a cell is alive or not
+	bool isLive(class Cell c) {
+		if (c.isUpdated) {
+			return c.lastLive;
+		} else {
+			return c.live;
+		}
+	}
+
+	// A routine counting the number of alive neighbors.
+	int countLiveNeighbors([class Cell] n) {
+		return n:.count(isLive);
+	}
+
+}
+
+nx = 100;
+ny = 100;
+cellSize = 10;
+interval = 100;
+
+// Container of all cells
+[class Cell] container;
+
+// Matrix representation of all cells above
+[[class Cell]] matrix;
+
+// Initialize cells
+for(int i = 0; i < nx; i = i + 1) {
+	[class Cell] row;
+	for (int j = 0; j < ny; j = j + 1) {
+		class Cell c = class Cell();
+		c.x = i;
+		c.y = j;
+		c->Dead;
+		container:.append(c);
+		row:.append(c);
+	}
+	matrix:.append(row);
+}
+
+// Initialize neighbors of each cell
+for(class Cell c : container) {
+	int x = c.x;
+	int y = c.y;
+
+	// Index of all neighbors
+	[[int]] neighborIdx = [[int]]{
+	[int]{x - 1, y - 1}, [int]{x - 1, y}, [int]{x - 1, y + 1},
+	[int]{x, y - 1}, [int]{x, y + 1},
+	[int]{x + 1, y - 1}, [int]{x + 1, y}, [int]{x + 1, y + 1}
+	};
+
+	// Handle index overflow and underflow, and 
+	// put the corresponding cell into current cell's neighbor list
+	for([int] list : neighborIdx) {
+		if(list:[0] < 0) {
+			list:.set(0, list:[0] + nx);
+		} else if (list:[0] > nx - 1) {
+			list:.set(0, nx - list:[0]);
+		}
+		if(list:[1] < 0) {
+			list:.set(1, list:[1] + ny);
+		} else if (list:[1] > ny - 1) {
+			list:.set(1, ny - list:[1]);
+		}
+		c.neighbors:.append(matrix:[list:[0]]:[list:[1]]);
+	}
+}
+
+// Create initial pattern
+[[int]] liveIdx = [[int]]{[int]{1, 5},[int]{2, 5},[int]{1, 6},[int]{2, 6},[int]{11, 5},[int]{11, 6},[int]{11, 7},[int]{12, 4},[int]{13, 3},[int]{14, 3},[int]{12, 8},[int]{13, 9},[int]{14, 9},[int]{15, 6},[int]{17, 6},[int]{17, 5},[int]{17, 7},[int]{16, 4},[int]{16, 8},[int]{18, 6},[int]{21, 5},[int]{21, 4},[int]{21, 3},[int]{22, 3},[int]{22, 4},[int]{22, 5},[int]{23, 6},[int]{23, 2},[int]{25, 2},[int]{25, 1},[int]{25, 6},[int]{25, 7},[int]{35, 3},[int]{35, 4},[int]{36, 3},[int]{36, 4}};
+
+for([int] l : liveIdx) {
+	matrix:[l:[0]]:[l:[1]]->Live;
+	matrix:[l:[0]]:[l:[1]].live = true;
+	matrix:[l:[0]]:[l:[1]].lastLive = true;
+}
+
+run(container);
