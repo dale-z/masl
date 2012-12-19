@@ -20,11 +20,13 @@ print_string "\n";;
 
 let main =
 	let action =
-		if Array.length Sys.argv > 1 then
-  		List.assoc
-  			Sys.argv.(1)
-  			[("-a", Ast); ("-t", Translate); ("-c", Compile); ("-v", Version)]
-		else Version in
+		try
+			if Array.length Sys.argv > 1 then
+	  		List.assoc
+	  			Sys.argv.(1)
+	  			[("-a", Ast); ("-t", Translate); ("-c", Compile); ("-v", Version)]
+			else Version 
+		with Not_found -> Version in
 	let src_name =
 		if Array.length Sys.argv > 2 then Sys.argv.(2)
 		else "stdin" in
@@ -38,7 +40,8 @@ let main =
 			Lexing.from_channel stdin in
 		let ast = Parser.program Scanner.token_parser lexbuf in
 		print_ast ast;
-	| Translate ->
+	| Compile
+	| Translate as flag ->
 		print_string ("Translating program " ^ src_name ^ " ...\n");
 		let lexbuf =
 		if Array.length Sys.argv > 2 then
@@ -48,10 +51,21 @@ let main =
 		let ast = Parser.program Scanner.token_parser lexbuf in
 		let translate_name =
 			String.sub Sys.argv.(2) 0 (String.index Sys.argv.(2) '.') in
-		let java_src = translate_ast translate_name ast in
+		let java_src =
+			begin
+  			try
+    			Semantic.check_semantic ast;
+    		with Failure msg -> print_string msg; exit 0;
+			end;
+			translate_ast translate_name ast in
 		let translate_chn = open_out (translate_name ^ ".java") in
 		output_string translate_chn java_src;
-		print_string ("\nWritten to " ^ translate_name ^ ".java.\n");		
-	| Compile ->
-		print_string ("TODO Compiling program " ^ src_name ^ " ...\n");
+		print_string ("Written to " ^ translate_name ^ ".java.\n");
+		if flag == Compile then
+			begin
+    		print_string ("Compiling program " ^ src_name ^ " ...\n");
+				flush stdout;
+    		Unix.system ("javac " ^ translate_name ^ ".java"); ()
+			end
+		else ()
 	| Version -> print_version ();;
