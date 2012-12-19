@@ -16,7 +16,7 @@ public abstract class MaslSimulation extends JFrame {
 //	ArrayList<MaslClass> __container;
 	
 	public void paint(Graphics g) {
-
+		g = getContentPane().getGraphics();
 		g.clearRect(0, 0, nx*cellSize, ny*cellSize);
 		
 		// Draw all the agents.
@@ -38,7 +38,7 @@ public abstract class MaslSimulation extends JFrame {
 		
 		// Set up the drawing area.
 		setTitle("MASL Simulation");
-		setSize(cellSize * nx, cellSize * ny);
+		setSize(cellSize * nx, (cellSize+2) * ny);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -146,7 +146,7 @@ public abstract class MaslSimulation extends JFrame {
 	// The number of cells in a column.
 	public int ny = 10;
 	// The size of a cell.
-	public int cellSize = 30;
+	public int cellSize = 50;
 	// The number of milliseconds to be paused between two steps. 
 	public int interval = 2000;
 	
