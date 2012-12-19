@@ -1,0 +1,4 @@
+[char] list = [char]{'h', 'e', 'l', 'l', 'o'};
+for(char c : list) {
+	printChar(c);
+}

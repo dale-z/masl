@@ -1,0 +1,38 @@
+
+class People
+{
+	state Rich 
+	{
+		if(money - 1000000 < 0.1) this->Poor;
+	}
+
+	state Poor 
+	{
+		if(neighborRicherCount() > 3) 
+			money = money + 5000;
+		if(money - 1000000 > 0.1) this->Rich;
+	}
+
+	double money;
+		
+	int neighborRicherCount(int a, [class People] b)
+	{
+		a = 3;
+		class People p = b:.get(0);
+		return a;
+	}
+	
+	int age;
+	char sex;
+}
+
+class People p = class People();
+p.money = 100000.0;
+p.age = 21;
+p.sex = 'M';
+printDouble(p.money);
+printChar('\n');
+printInt(p.age);
+printChar('\n');
+printChar(p.sex);
+printChar('\n');

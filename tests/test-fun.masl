@@ -1,0 +1,15 @@
+int max(int a, int b) {
+	if (a > b) {
+		return a;
+	}
+
+	return b;
+}
+
+printInt(max(1, 2));
+printInt('\n');
+
+(int, int):int f = max;
+
+printInt(max(2, 3));
+printInt('\n');

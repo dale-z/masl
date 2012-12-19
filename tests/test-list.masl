@@ -1,0 +1,28 @@
+[int] list = [int]{1, 2, 3};
+printInt(list:.get(0));
+printChar('\n');
+list:.set(0, 0);
+printInt(list:.get(0));
+printChar('\n');
+list:.insert(0, -1);
+printInt(list:.get(0));
+printChar('\n');
+list:.remove(1);
+printInt(list:.get(1));
+printChar('\n');
+list:.append(10);
+printInt(list:.get(list:.size()-1));
+printChar('\n');
+list:[0] = -3;
+printInt(list:[0]);
+printChar('\n');
+
+bool isEvenNum(int num) { return (num%2 == 0); }
+
+[int] list2 = [int]{1, 2, 3, 4, 5, 6};
+[int] list3 = list2:.filter(isEvenNum);
+for(int i : list3) {
+	printInt(i);
+}
+printChar('\n');
+printInt(list2:.filter(isEvenNum));
