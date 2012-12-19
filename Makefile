@@ -3,7 +3,8 @@ COMMON_OBJS =\
 	parser.cmo\
 	ast.cmo\
 	astutils.cmo\
-	translate.cmo
+	translate.cmo\
+	semantic.cmo
 
 MASL_OBJS =\
 	$(COMMON_OBJS)\
@@ -24,10 +25,9 @@ CLEAN_OBJS =\
 
 .PHONY: all
 all: masl
-	export OCAMLRUNPARAM=b
 
 masl : $(MASL_OBJS)
-	ocamlc -g -o $@ str.cma $(MASL_OBJS)
+	ocamlc -o $@ unix.cma $(MASL_OBJS)
 
 scanner.ml: scanner.mll
 	ocamllex scanner.mll
@@ -36,22 +36,25 @@ parser.ml parser.mli: parser.mly
 	ocamlyacc -v parser.mly
 
 %.cmo: %.ml
-	ocamlc -c -g $<
+	ocamlc -c $<
 
 %.cmi: %.mli
-	ocamlc -c -g $<
+	ocamlc -c $<
 
 ast.cmi: ast.ml
-	ocamlc -c -g ast.ml
+	ocamlc -c ast.ml
 
 astutils.cmi: printast.ml
-	ocamlc -c -g printast.ml
+	ocamlc -c printast.ml
+
+semantic.cmi: semantic.ml
+	ocamlc -c semantic.ml
 
 translate.cmi: translate.ml
-	ocamlc -c -g translate.ml
+	ocamlc -c translate.ml
 
 toplevel.cmo toplevel.cmi: toplevel.ml
-	ocamlc -c -g toplevel.ml
+	ocamlc -c toplevel.ml
 
 .PHONY: clean
 clean:
@@ -64,3 +67,4 @@ parser.cmo: parser.cmi ast.cmi
 
 astutils.cmo: ast.cmi
 translate.cmo: ast.cmi
+semantic.cmo: ast.cmi
