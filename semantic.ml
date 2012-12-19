@@ -132,15 +132,25 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 		else
 			raise (Failure("Expect a Bool Expr in Dowhile"))
 	| Continue ->
-		if env = 2 || env = 7 then
-			(v_table, c_table, s_table)
-		else
-			raise(Failure("Continue Must Be in Loop"))
+		let rec helper list =
+			match list with
+			| [] -> raise(Failure("Continue Must Be in Loop"))
+			| (env, _)::tail ->  
+				if env = 2 || env = 7 then
+					(v_table, c_table, s_table)
+				else
+					helper tail
+		in helper level
 	| Break ->
-		if env = 2 || env = 7 then
-			(v_table, c_table, s_table)
-		else
-			raise(Failure("Break Must Be in Loop"))
+		let rec helper list =
+			match list with
+			| [] -> raise(Failure("Continue Must Be in Loop"))
+			| (env, _)::tail ->
+				if env = 2 || env = 7 then
+					(v_table, c_table, s_table)
+				else
+					helper tail
+			in helper level
 	| Return(expr) ->
 		(
 		let rec find_func_type list =
