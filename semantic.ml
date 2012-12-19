@@ -24,8 +24,11 @@ let rec check_semantic program =
 	(
 	List.fold_right2
 	(fun id t -> NameMap.add id t) 
-	["printInt"; "printDouble"; "printChar"; "printBool"; "printStr"] 
-	[(FuncType(Void,[Int]), [(0,"")]); (FuncType(Void,[Double]), [(0,"")]); (FuncType(Void,[Char]), [(0,"")]); (FuncType(Void,[Bool]), [(0,"")]); (FuncType(Void,[ListType(Char)]), [(0,"")])] 
+	["printInt"; "printDouble"; "printChar"; "printBool"; "printStr";"nx";"ny";"cellSize";"interval"] 
+	[
+	(FuncType(Void,[Int]), [(0,"")]); (FuncType(Void,[Double]), [(0,"")]); (FuncType(Void,[Char]), [(0,"")]); (FuncType(Void,[Bool]), [(0,"")]); (FuncType(Void,[ListType(Char)]), [(0,"")]);
+	(Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")])
+	] 
 	NameMap.empty, 
 	NameMap.empty, NameMap.empty
 	) 
