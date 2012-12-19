@@ -7,6 +7,7 @@ abstract public class MaslClass {
 	// obj->state_n can be translated into:
 	// obj._curState = "state_n";
 	public String __curState;
+	public boolean isUpdated = false;
 	public MaslSimulation __simulation;
 	
 	public int x;

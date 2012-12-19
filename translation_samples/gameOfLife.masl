@@ -1,6 +1,7 @@
 // Define the cell in the game as a class.
 class Cell {
 
+
 	// If the cell is alive, it will only live on with 2 or 3 live neighbors.
 	state Live {
 		r = 1.0;
@@ -28,13 +29,20 @@ class Cell {
 		}
 	}
 
+	// All neighbors of this cell
+	[class Cell] neighbors;
+
 	// State in last round
 	bool lastLive = false;
 	bool live = false;
 
 	// A function to used to inspect whether a cell is alive or not
 	bool isLive(class Cell c) {
-		return c.lastLive;
+		if (c.isUpdated) {
+			return c.lastLive;
+		} else {
+			return c.live;
+		}
 	}
 
 	// A routine counting the number of alive neighbors.
@@ -42,8 +50,6 @@ class Cell {
 		return n:.count(isLive);
 	}
 
-	// All neighbors of this cell
-	[class Cell] neighbors;
 }
 
 // Container of all cells
@@ -96,39 +102,48 @@ for(class Cell c : container) {
 	}
 }
 
+/*for(class Cell c : matrix:[0]:[0].neighbors) {
+	c->Live;
+	c.live = true;
+	c.r = 1.0;
+	c.b = 0.0;
+}*/
+
 // Create initial pattern
 /*matrix:[0]:[0]->Live;
-matrix:[0]:[0].lastLive = true;
-matrix:[0]:[0].r = 1.0;
-matrix:[0]:[0].b = 0.0;
+matrix:[0]:[0].live = true;
 matrix:[2]:[0]->Live;
-matrix:[2]:[0].lastLive = true;
-matrix:[2]:[0].r = 1.0;
-matrix:[2]:[0].b = 0.0;
+matrix:[2]:[0].live = true;
 matrix:[1]:[1]->Live;
-matrix:[1]:[1].lastLive = true;
-matrix:[1]:[1].r = 1.0;
-matrix:[1]:[1].b = 0.0;
+matrix:[1]:[1].live = true;
 matrix:[2]:[1]->Live;
-matrix:[2]:[1].lastLive = true;
-matrix:[2]:[1].r = 1.0;
-matrix:[2]:[1].b = 0.0;
+matrix:[2]:[1].live = true;
 matrix:[1]:[2]->Live;
-matrix:[1]:[2].lastLive = true;
-matrix:[1]:[2].r = 1.0;
-matrix:[1]:[2].b = 0.0;*/
+matrix:[1]:[2].live = true;*/
 
 matrix:[2]:[1]->Live;
+matrix:[2]:[1].live = true;
 matrix:[2]:[1].lastLive = true;
-matrix:[2]:[1].r = 1.0;
-matrix:[2]:[1].b = 0.0;
 matrix:[2]:[2]->Live;
+matrix:[2]:[2].live = true;
 matrix:[2]:[2].lastLive = true;
-matrix:[2]:[2].r = 1.0;
-matrix:[2]:[2].b = 0.0;
 matrix:[2]:[3]->Live;
+matrix:[2]:[3].live = true;
 matrix:[2]:[3].lastLive = true;
-matrix:[2]:[3].r = 1.0;
-matrix:[2]:[3].b = 0.0;
+
+/*matrix:[0]:[0]->Live;
+matrix:[0]:[0].live = true;
+matrix:[0]:[0].lastLive = true;
+matrix:[0]:[1]->Live;
+matrix:[0]:[1].live = true;
+matrix:[0]:[1].lastLive = true;
+matrix:[1]:[0]->Live;
+matrix:[1]:[0].live = true;
+matrix:[1]:[0].lastLive = true;
+matrix:[1]:[1]->Live;
+matrix:[1]:[1].live = true;
+matrix:[1]:[1].lastLive = true;*/
+
+interval = 300;
 
 run(container);

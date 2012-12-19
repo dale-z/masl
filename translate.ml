@@ -228,7 +228,7 @@ and generate_state_update states = "public void __update() {\n if(" ^
 			(fun acc state -> acc ^ "\"" ^ (fst state) ^ "\".equals(__curState)) {\n" ^ 
       (fst state) ^ "();\n} else if(")
 				"" states
-    ) ^ "true){}\n}\n"
+    ) ^ "true){}\nisUpdated = true;\n}\n"
 and translate_arg_list arg_list = let str = 
   (List.fold_left 
     (fun acc arg -> acc ^ "," ^ (translate_expr arg))

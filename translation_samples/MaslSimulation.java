@@ -47,6 +47,15 @@ public abstract class MaslSimulation extends JFrame {
         // Here we go...
 		while(true) {
 			
+			for(int i = 0; i < list.size(); ++i) {				
+				list.get(i).isUpdated = false;
+			}
+
+			// Update all the agents.
+			for(int i = 0; i < list.size(); ++i) {				
+				list.get(i).__update();
+			}
+
 			// Repaint the drawing area to reflect the updated agents.
 			repaint();
 			
@@ -54,11 +63,6 @@ public abstract class MaslSimulation extends JFrame {
 			try {
 				Thread.sleep(interval);
 			} catch (InterruptedException e) {
-			}
-
-			// Update all the agents.
-			for(int i = 0; i < list.size(); ++i) {				
-				list.get(i).__update();
 			}
 		}
 	}
