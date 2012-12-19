@@ -45,11 +45,6 @@ public abstract class MaslSimulation extends JFrame {
         // Here we go...
 		while(true) {
 			
-			// Update all the agents.
-			for(int i = 0; i < list.size(); ++i) {				
-				list.get(i).__update();
-			}
-			
 			// Repaint the drawing area to reflect the updated agents.
 			repaint();
 			
@@ -57,6 +52,11 @@ public abstract class MaslSimulation extends JFrame {
 			try {
 				Thread.sleep(interval);
 			} catch (InterruptedException e) {
+			}
+
+			// Update all the agents.
+			for(int i = 0; i < list.size(); ++i) {				
+				list.get(i).__update();
 			}
 		}
 	}
@@ -146,7 +146,7 @@ public abstract class MaslSimulation extends JFrame {
 	// The size of a cell.
 	public int cellSize = 30;
 	// The number of milliseconds to be paused between two steps. 
-	public int interval = 1000;
+	public int interval = 2000;
 	
 	private MaslList<MaslClass> __list;
 }
