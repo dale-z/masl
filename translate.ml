@@ -107,7 +107,7 @@ and translate_stmt indent node = match node with
 		translate_stmt ("  " ^ indent) else_body ^
 		indent ^ "}\n"
   | For(init, pred, update, body) ->
-		indent ^ "for(" ^ translate_stmt "" init ^ ";" ^
+		indent ^ "for(" ^ translate_stmt "" init ^
 		translate_expr pred ^ ";" ^
 		translate_expr update ^ ") {\n" ^
 		translate_stmt ("  " ^ indent) body ^
