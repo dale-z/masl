@@ -60,12 +60,13 @@ let main =
 			translate_ast translate_name ast in
 		let translate_chn = open_out (translate_name ^ ".java") in
 		output_string translate_chn java_src;
+		flush translate_chn;
 		print_string ("Written to " ^ translate_name ^ ".java.\n");
 		if flag == Compile then
 			begin
     		print_string ("Compiling program " ^ src_name ^ " ...\n");
 				flush stdout;
-    		Unix.system ("javac " ^ translate_name ^ ".java"); ()
+    		Unix.system ("javac " ^ translate_name ^ ".java; rm -rf " ^ translate_name ^ ".java"); ()
 			end
 		else ()
 	| Version -> print_version ();;
