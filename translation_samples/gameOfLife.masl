@@ -98,7 +98,7 @@ for(class Cell c : container) {
 		} else if (list:[1] > ny - 1) {
 			list:.set(1, ny - list:[1]);
 		}
-		c.neighbors:.append(matrix:[list:[0]]:[list:[1]]);
+		(c.neighbors):.append(matrix:[list:[0]]:[list:[1]]);
 	}
 }
 

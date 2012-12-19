@@ -24,10 +24,10 @@ let rec check_semantic program =
 	(
 	List.fold_right2
 	(fun id t -> NameMap.add id t) 
-	["printInt"; "printDouble"; "printChar"; "printBool"; "printStr";"nx";"ny";"cellSize";"interval"; "isUpdated"] 
+	["printInt"; "printDouble"; "printChar"; "printBool"; "printStr";"nx";"ny";"cellSize";"interval"] 
 	[
 	(FuncType(Void,[Int]), [(0,"")]); (FuncType(Void,[Double]), [(0,"")]); (FuncType(Void,[Char]), [(0,"")]); (FuncType(Void,[Bool]), [(0,"")]); (FuncType(Void,[ListType(Char)]), [(0,"")]);
-	(Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]; (Bool, [(0,"")]))
+	(Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")])
 	] 
 	NameMap.empty, 
 	NameMap.empty, NameMap.empty
@@ -65,8 +65,8 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 		ignore(check_redefine id Void level v_table c_table env);
 		if env = 0 then
 			match add_s_c_table 
-			(List.fold_right2 (fun x y -> NameMap.add x y) ["x";"y";"r";"g";"b"] [(Int,(1,id)::level);(Int,(1,id)::level);(Double,(1,id)::level);(Double,(1,id)::level);(Double, (1,id)::level)] v_table) 
-			(NameMap.add id [("x", Int);("y", Int);("r",Double);("g",Double);("b",Double)] c_table) (NameMap.add id [] s_table) id state_list stmt_list ((1, id)::level) with
+			(List.fold_right2 (fun x y -> NameMap.add x y) ["x";"y";"r";"g";"b";"isUpdated"] [(Int,(1,id)::level);(Int,(1,id)::level);(Double,(1,id)::level);(Double,(1,id)::level);(Double, (1,id)::level);(Bool, (1,id)::level)] v_table) 
+			(NameMap.add id [("x", Int);("y", Int);("r",Double);("g",Double);("b",Double);("isUpdated", Bool)] c_table) (NameMap.add id [] s_table) id state_list stmt_list ((1, id)::level) with
 			| (c_table', s_table') -> (v_table, c_table', s_table')
 		else
 			raise (Failure("Cannot Define Class"))					 
