@@ -11,7 +11,7 @@ class Class1 {
 		this->State1;
 	}
 
-	double mem1;
+	int mem1;
 	[int] mem2 = [int]{1, 2};
 
 	int mem3(int a, int b) {
@@ -37,9 +37,6 @@ for (int g : list) {
 	g = g + d;
 }
 
-[class Class1] list2 = [class Class1]{c, class Class1()};
-[(int):class Class1] list3 = [(int):class Class1]{function1};
-(int):class Class1 h = function2(list2, list3);
 
 class Class1 function1(int d) {
 	class Class1 c = class Class1();
@@ -52,9 +49,9 @@ class Class1 function1(int d) {
 	list2:.append(function1);
 	fun((int):class Class1) f = list2:.get(0);
 	bool b = true;
-	if(b && list:[0]@state1) {
-		list:[0]->state2;
-		b = (list:.get(0))@state1;
+	if(b && list:[0]@State1) {
+		list:[0]->State2;
+		b = (list:.get(0))@State1;
 	}
 
 	for ((int):class Class1 g : list2) {
@@ -64,20 +61,26 @@ class Class1 function1(int d) {
 	return f;
 }
 
+
+[class Class1] list2 = [class Class1]{c, class Class1()};
+[(int):class Class1] list3 = [(int):class Class1]{function1};
+(int):class Class1 h = function2(list2, list3);
+
+
+
 class Flasher {
 	state State1 {
 		x = x + offset;
 		this->State2;
-		printList([class Flasher]{this});
+		//printList([class Flasher]{this});
 		printChar('\n');
 	}
 	state State2 {
 		x = x - offset;
 		this->State1;
-		printList([class Flasher]{this});
+		//printList([class Flasher]{this});
 		printChar('\n');
 	}
-
 	int offset = 1;
 }
 
@@ -93,9 +96,15 @@ f2.y = 3;
 f2.b = 1.0;
 f2->State2;
 list4:.append(f2);
-printList(list4);
+class Flasher f3 = class Flasher();
+f3.x = 6;
+f3.y = 5;
+f3.g = 1.0;
+f3->State2;
+list4:.append(f3);
+//printList(list4);
 printStr("Hello World!\n");
-printList("Hello World!\n");
+printStr("Hello World!\n");
 printInt(f1.x);
 printStr("\n");
 printDouble(f1.r);
@@ -103,6 +112,6 @@ printStr("\n");
 char ccc = 'c';
 printChar(ccc);
 printStr("\n");
-printBool(true);
+printBool((1 == 1));
 printStr("\n");
 run(list4);
