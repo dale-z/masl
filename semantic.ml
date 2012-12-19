@@ -295,34 +295,23 @@ and check_expr v_table c_table s_table env level expr =
 					match op' with
 					| Dot -> 
 						(
-						match (e1', e2') with
-						| (Id(id1), Id(id2)) -> 
-							let (c_type, _) = NameMap.find id1 v_table in
-							(
-							match c_type with
-							| Class(c_name) ->
-  							if (find_cls_mem c_table c_name id2) = check_expr v_table c_table s_table env level e2 then
-  								(find_cls_mem c_table c_name id2)
-  							else
-  								raise(Failure("Cannot Find Class Member"))
-							)
-						| _ -> raise (Failure("Dot Operation Error 1"))
+						match ((check_expr v_table c_table s_table env level e1'), e2') with
+						| (Class(c_name), Id(id2)) ->
+  						if (find_cls_mem c_table c_name id2) = check_expr v_table c_table s_table env level e2 then
+  							(find_cls_mem c_table c_name id2)
+  						else
+  							raise(Failure("Cannot Find Class Member"))
+						| _ -> raise(Failure("Dot Operation Error 1"))
 						) 
 					| Index ->
 						(
-						match (e1', e2') with
-						| (Id(id1), _) ->
-							if NameMap.mem id1 v_table then
-								match NameMap.find id1 v_table with
-								| (ListType(t), _) ->
-									if (check_expr v_table c_table s_table env level e2) = Int then
-										t
-									else
-										raise(Failure("List Type Mismatch"))
-								| _ -> raise (Failure(id1^" is not a List"))
+						match ((check_expr v_table c_table s_table env level e1'), e2') with
+						| (ListType(t), _) ->
+							if (check_expr v_table c_table s_table env level e2) = Int then
+								t
 							else
-								raise (Failure("Cannot Find List " ^ id1))
-						| _ -> raise (Failure("Index Operation Error"))
+								raise(Failure("List Type Mismatch"))
+						| _ -> raise (Failure("Index Operation Error 1"))
 						)	
 					| _ -> raise(Failure("Assignment Fails"))
 					)
@@ -330,19 +319,13 @@ and check_expr v_table c_table s_table env level expr =
 			in check_left_type e1			
 		| Index ->
 			(
-			match (e1, e2) with
-			| (Id(id1), _) ->
-				if NameMap.mem id1 v_table then
-					match NameMap.find id1 v_table with
-					| (ListType(t), _) ->
-						if (check_expr v_table c_table s_table env level e2) = Int then
-							t
-						else
-							raise(Failure("List Type Mismatch"))
-					| _ -> raise (Failure(id1^" is not a List"))
-				else
-					raise (Failure("Cannot Find List " ^ id1))
-			| _ -> raise(Failure("Index Operation Error"))
+			match ((check_expr v_table c_table s_table env level e1), e2) with
+			| (ListType(t), _) ->
+					if (check_expr v_table c_table s_table env level e2) = Int then
+						t
+					else
+						raise(Failure("List Type Mismatch"))
+			| _ -> raise(Failure("Index Operation Error 2"))
 			)
 		| Trans ->
 			(
@@ -390,7 +373,7 @@ and check_expr v_table c_table s_table env level expr =
 					ListType(t)
 				else
 					raise(Failure("Index Number Must Be an Integer"))
-			| _ -> raise(Failure("Index Operation Error"))
+			| _ -> raise(Failure("Index Operation Error 3"))
 			)
 		| Dot -> 
 			(
