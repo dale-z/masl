@@ -5,7 +5,8 @@ class Cell {
 	state Live {
 		r = 1.0;
 		b = 0.0;
-		liveInLastRound = true;
+		lastLive = live;
+		live = true;
 		int liveNeighborsNum = countLiveNeighbors(neighbors);
 		if(liveNeighborsNum < 2 || liveNeighborsNum > 3) {
 			r = 0.0;
@@ -18,7 +19,8 @@ class Cell {
 	state Dead {
 		r = 0.0;
 		b = 1.0;
-		liveInLastRound = false;
+		lastLive = live;
+		live = false;
 		if(countLiveNeighbors(neighbors) == 3) {
 			r = 1.0;
 			b = 0.0;
@@ -26,13 +28,14 @@ class Cell {
 		}
 	}
 
+	// State in last round
+	bool lastLive = false;
+	bool live = false;
+
 	// A function to used to inspect whether a cell is alive or not
 	bool isLive(class Cell c) {
-		return c.liveInLastRound;
+		return c.lastLive;
 	}
-
-	// State in last round
-	bool liveInLastRound = false;
 
 	// A routine counting the number of alive neighbors.
 	int countLiveNeighbors([class Cell] n) {
@@ -94,25 +97,38 @@ for(class Cell c : container) {
 }
 
 // Create initial pattern
-matrix:[0]:[0]->Live;
-matrix:[0]:[0].liveInLastRound = true;
+/*matrix:[0]:[0]->Live;
+matrix:[0]:[0].lastLive = true;
 matrix:[0]:[0].r = 1.0;
 matrix:[0]:[0].b = 0.0;
 matrix:[2]:[0]->Live;
-matrix:[2]:[0].liveInLastRound = true;
+matrix:[2]:[0].lastLive = true;
 matrix:[2]:[0].r = 1.0;
 matrix:[2]:[0].b = 0.0;
 matrix:[1]:[1]->Live;
-matrix:[1]:[1].liveInLastRound = true;
+matrix:[1]:[1].lastLive = true;
 matrix:[1]:[1].r = 1.0;
 matrix:[1]:[1].b = 0.0;
 matrix:[2]:[1]->Live;
-matrix:[2]:[1].liveInLastRound = true;
+matrix:[2]:[1].lastLive = true;
 matrix:[2]:[1].r = 1.0;
 matrix:[2]:[1].b = 0.0;
 matrix:[1]:[2]->Live;
-matrix:[1]:[2].liveInLastRound = true;
+matrix:[1]:[2].lastLive = true;
 matrix:[1]:[2].r = 1.0;
-matrix:[1]:[2].b = 0.0;
+matrix:[1]:[2].b = 0.0;*/
+
+matrix:[2]:[1]->Live;
+matrix:[2]:[1].lastLive = true;
+matrix:[2]:[1].r = 1.0;
+matrix:[2]:[1].b = 0.0;
+matrix:[2]:[2]->Live;
+matrix:[2]:[2].lastLive = true;
+matrix:[2]:[2].r = 1.0;
+matrix:[2]:[2].b = 0.0;
+matrix:[2]:[3]->Live;
+matrix:[2]:[3].lastLive = true;
+matrix:[2]:[3].r = 1.0;
+matrix:[2]:[3].b = 0.0;
 
 run(container);
