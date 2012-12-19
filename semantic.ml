@@ -20,7 +20,19 @@ end)
 
 let rec check_semantic program =	 
 	match program with
-	| Program(stmt_list) -> List.fold_left (check_stmt 0 [(0,"")]) (NameMap.empty, NameMap.empty, NameMap.empty) stmt_list
+	| Program(stmt_list) -> ignore(List.fold_left (check_stmt 0 [(0,"")]) 
+	(
+	List.fold_right2
+	(fun id t -> NameMap.add id t) 
+	["printInt"; "printDouble"; "printChar"; "printBool"; "printStr";"nx";"ny";"cellSize";"interval"] 
+	[
+	(FuncType(Void,[Int]), [(0,"")]); (FuncType(Void,[Double]), [(0,"")]); (FuncType(Void,[Char]), [(0,"")]); (FuncType(Void,[Bool]), [(0,"")]); (FuncType(Void,[ListType(Char)]), [(0,"")]);
+	(Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")])
+	] 
+	NameMap.empty, 
+	NameMap.empty, NameMap.empty
+	) 
+	stmt_list);true
 
 (*check statements*)
 
@@ -41,6 +53,10 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
   					raise (Failure("Basic Assignment Check Fails"))
 		in check_basic_init_decl v_table basic_init_decl
 	| FuncDecl(type_spec, id, expr) ->
+		ignore(
+			if id = "run" && env = 0 then
+				raise(Failure("Cannot Define Run Function"))
+			);
 		if (check_expr (check_redefine id type_spec level v_table c_table env) c_table s_table env ((6, id)::level) expr) = type_spec then	
 			(check_redefine id type_spec level v_table c_table env, c_table, s_table)
 		else
@@ -48,7 +64,9 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 	| ClassDecl(id, state_list, stmt_list) ->
 		ignore(check_redefine id Void level v_table c_table env);
 		if env = 0 then
-			match add_s_c_table v_table (NameMap.add id [] c_table) (NameMap.add id [] s_table) id state_list stmt_list ((1, id)::level) with
+			match add_s_c_table 
+			(List.fold_right2 (fun x y -> NameMap.add x y) ["x";"y";"r";"g";"b"] [(Int,(1,id)::level);(Int,(1,id)::level);(Double,(1,id)::level);(Double,(1,id)::level);(Double, (1,id)::level)] v_table) 
+			(NameMap.add id [("x", Int);("y", Int);("r",Double);("g",Double);("b",Double)] c_table) (NameMap.add id [] s_table) id state_list stmt_list ((1, id)::level) with
 			| (c_table', s_table') -> (v_table, c_table', s_table')
 		else
 			raise (Failure("Cannot Define Class"))					 
@@ -78,6 +96,7 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 		else 
 			raise (Failure("If Statement Error"))
 	| For(stmt1, expr1, expr2, stmt2) ->
+		(
 		match stmt1 with
 		| BasicDecl(_, _) | Expr(_) | NoStmt ->
 			(
@@ -89,7 +108,17 @@ and check_stmt env level (v_table, c_table, s_table) stmt =
 				else
 					raise(Failure("Expect a Bool Expr in For"))
 			)
-		| _ -> raise(Failure("Cannot Define Such Stmt in For")) 
+		| _ -> raise(Failure("Cannot Define Such Stmt in For"))
+		) 
+	| ForEach(type_spec, iterator, expr, stmt) ->
+		(
+		match (check_expr v_table c_table s_table env level expr) with
+		| ListType(t) -> 
+			if t = type_spec then
+				check_stmt env ((7, ""):: level) ((check_redefine iterator type_spec level v_table c_table env), c_table, s_table) stmt
+			else
+				raise(Failure("Iterator Type Mismatch"))
+		)
 	| While(expr, stmt1) ->
 		ignore (check_stmt env ((2, "")::level) (v_table, c_table, s_table) stmt1);
 		if (check_expr v_table c_table s_table env level expr) = Bool then 
@@ -178,16 +207,20 @@ and check_expr v_table c_table s_table env level expr =
 				| (t, name) ->  get_func_param (t::type_spec_list) tail (check_redefine name t level v_table' c_table env)
 		in get_func_param [] param_list v_table
 	| This ->
-		if env = 4 then
-			match level with
-			| hd1::(hd2::tail) ->
+		let rec helper list flg=
+			(
+			match list with
+			| [] -> raise(Failure("Cannot Use This Operator Here"))
+			| head::tail ->
 				(
-				match hd2 with
-				| (_, id) -> Class(id)
+				match head with
+				| (1, id) -> 
+					if flg = 1 then Class(id) else raise(Failure("Cannot Use This Operator Here")) 
+				| (4, _) -> helper tail 1
+				| _ -> helper tail flg
 				)
-			| _ -> raise(Failure("Unknown Error")) 
-		else
-			raise(Failure("Cannot Use This Operator Heres"))
+			)
+		in helper level 0
 	| UnaryOp(op, expr) ->
 		( 
 		match op with
@@ -220,7 +253,7 @@ and check_expr v_table c_table s_table env level expr =
 		| Or ->
 			(
 			match ((check_expr v_table c_table s_table env level e1), (check_expr v_table c_table s_table env level e2)) with
-			| (Bool, Bool) -> Int
+			| (Bool, Bool) -> Bool
 			| _ -> raise(Failure("Type Mismatch"))
 			)
 		| Gt | Ge | Eq | Neq | Le
@@ -237,24 +270,24 @@ and check_expr v_table c_table s_table env level expr =
 							if (check_expr v_table c_table s_table env level e2) = Class(name) then
 								Class(name)
 							else
-								raise(Failure("Assignment Fails"))	
+								raise(Failure("Class Assignment Fails"))	
 						| (FuncType(arg1, arg2), _) -> 
 							if (check_expr v_table c_table s_table env level e2) = FuncType(arg1, arg2) then
 								FuncType(arg1, arg2)
 							else
-								 raise(Failure("Assignment Fails"))
+								 raise(Failure("Function Assignment Fails"))
 						| (ListType(arg), _) ->
 							if (check_expr v_table c_table s_table env level e2) = ListType(arg) then
 								ListType(arg)
 							else
-								raise(Failure("Assignment Fails"))
+								raise(Failure("List Assignment Fails"))
 						| (type_spec, _) -> 
 							match (type_spec, (check_expr v_table c_table s_table env level e2)) with
 							| (Double, Int) | (Double, Char) | (Double, Double) -> Double
 							| (Int, Char) | (Int, Int) -> Int
 							| (Char, Char) -> Char
 							| (Bool, Bool) -> Bool
-							| _ -> raise(Failure("Assignment Fails"))
+							| _ -> raise(Failure("Basic Assignment Fails"))
 					else
 						raise (Failure("Cannot Find Identifier "^id))
 				| BinaryOp(e1', op', e2') ->
@@ -264,11 +297,16 @@ and check_expr v_table c_table s_table env level expr =
 						(
 						match (e1', e2') with
 						| (Id(id1), Id(id2)) -> 
-							if (find_cls_mem c_table id1 id2) = check_expr v_table c_table s_table env level e2 then
-								(find_cls_mem c_table id1 id2)
-							else
-								raise(Failure("Cannot Find Class Member"))
-						| _ -> raise (Failure("Dot Operation Error"))
+							let (c_type, _) = NameMap.find id1 v_table in
+							(
+							match c_type with
+							| Class(c_name) ->
+  							if (find_cls_mem c_table c_name id2) = check_expr v_table c_table s_table env level e2 then
+  								(find_cls_mem c_table c_name id2)
+  							else
+  								raise(Failure("Cannot Find Class Member"))
+							)
+						| _ -> raise (Failure("Dot Operation Error 1"))
 						) 
 					| Index ->
 						(
@@ -277,7 +315,7 @@ and check_expr v_table c_table s_table env level expr =
 							if NameMap.mem id1 v_table then
 								match NameMap.find id1 v_table with
 								| (ListType(t), _) ->
-									if (check_expr v_table c_table s_table env level e2) = t then
+									if (check_expr v_table c_table s_table env level e2) = Int then
 										t
 									else
 										raise(Failure("List Type Mismatch"))
@@ -290,42 +328,58 @@ and check_expr v_table c_table s_table env level expr =
 					)
 				| _ -> raise(Failure("Assignment Error"))	
 			in check_left_type e1			
+		| Index ->
+			(
+			match (e1, e2) with
+			| (Id(id1), _) ->
+				if NameMap.mem id1 v_table then
+					match NameMap.find id1 v_table with
+					| (ListType(t), _) ->
+						if (check_expr v_table c_table s_table env level e2) = Int then
+							t
+						else
+							raise(Failure("List Type Mismatch"))
+					| _ -> raise (Failure(id1^" is not a List"))
+				else
+					raise (Failure("Cannot Find List " ^ id1))
+			| _ -> raise(Failure("Index Operation Error"))
+			)
 		| Trans ->
 			(
 			match(e1, e2) with
-			| (Id(id1), Id(id2)) -> 
-				if find_cls_state s_table id1 id2 then
-					(*
-					match NameMap.find id1 v_table with
-					| (type_spec, _) -> type_spec
-					*)
-					Void 
-				else
-					raise(Failure("Cannot Find State "^id2))
-			| (This, Id(id2)) ->
-				let rec helper list =
-					match list with
-					| (1, id1)::tail ->
-						if find_cls_state s_table id1 id2 then
-    					(*
-    					match NameMap.find id1 v_table with
-    					| (type_spec, _) -> type_spec
-    					*)
-    					Void 
-    				else
-    					raise(Failure("Cannot Find State "^id2))
-					| hd::tail -> helper tail
-				in helper level
+			| (e1, Id(id2)) ->
+				let c_type = check_expr v_table c_table s_table env level e1 in
+				(
+				match c_type with
+				| Class(c_name) ->
+  				if find_cls_state s_table c_name id2 then
+  					(*
+  					match NameMap.find id1 v_table with
+  					| (type_spec, _) -> type_spec
+  					*)
+  					Void 
+  				else
+  					raise(Failure("Cannot Find State "^id2))
+				)
 			| _ -> raise(Failure("Trans Operation Error"))
 			)
 		| At ->
 			(
 			match(e1, e2) with
-			| (Id(id1), Id(id2)) -> 
-				if find_cls_state s_table id1 id2 then
-					Bool 
-				else
-					raise(Failure("Cannot Find State "^id2))
+			| (e1, Id(id2)) ->
+				let c_type = check_expr v_table c_table s_table env level e1 in
+				(
+				match c_type with
+				| Class(c_name) ->
+  				if find_cls_state s_table c_name id2 then
+  					(*
+  					match NameMap.find id1 v_table with
+  					| (type_spec, _) -> type_spec
+  					*)
+  					Bool 
+  				else
+  					raise(Failure("Cannot Find State "^id2))
+				)
 			| _ -> raise(Failure("At Operation Error"))
 			)
 		| Index ->
@@ -340,9 +394,44 @@ and check_expr v_table c_table s_table env level expr =
 			)
 		| Dot -> 
 			(
-			match (e1, e2) with
-			| (Id(id1), Id(id2)) -> find_cls_mem c_table id1 id2
-			| _ -> raise(Failure("Dot Operation Error"))
+			match ((check_expr v_table c_table s_table env level e1), e2) with
+			| (Class(class_name), Id(id2)) -> find_cls_mem c_table class_name id2
+			| (Class(class_name), FuncCall(f_id, e_list)) -> 
+				(
+    		match f_id with
+    		| Id(id) ->
+					ignore(find_cls_mem c_table class_name id);
+    			(
+					let rec helper list =
+						(
+						match list with
+						| [] -> raise(Failure("Cannot Find Function in Class"))
+						| head::tail -> 
+							match head with
+							| (f_name, f_type) -> 
+								if f_name = id then
+									(
+									match f_type with
+									| FuncType(type_spec, type_list) ->
+										let rec check_param type_list expr_list =
+											match (type_list, expr_list) with
+											| ([], []) -> type_spec
+											| (t::tail1, e::tail2) ->
+												if (check_expr v_table c_table s_table env level e) = t then
+													check_param tail1 tail2
+												else
+													raise(Failure("Function Parameter Type Mismatch"))
+											| _ -> raise(Failure("Function Parameter Mismatch"))
+										in check_param type_list e_list
+									)
+								else
+									helper tail
+						)
+					in helper (NameMap.find class_name c_table)
+					)
+    		| _ -> raise(Failure("Function Call Format Error"))
+    		)
+			| _ -> raise(Failure("Dot Operation Error 2"))
 			)
 		| LDot -> 
 			(
@@ -350,16 +439,46 @@ and check_expr v_table c_table s_table env level expr =
 			| (ListType(list_type), FuncCall(name, e_list)) ->
 				(
 				match (name, e_list) with
-				| (Id("insert"), [e1; e2]) | (Id("append"), [e1; e2]) ->
+				| (Id("insert"), [e1; e2]) | (Id("set"), [e1; e2]) ->
 					(
     			match ((check_expr v_table c_table s_table env level e1), (check_expr v_table c_table s_table env level e2)) with
     			| (Int, t) -> if t = list_type then Void else raise(Failure("Function Argument Type Mismatch"))
     			| _ -> raise(Failure("Function Argument Type Mismatch"))
+					) 
+				| (Id("append"), [e1]) ->
+					(
+					match (check_expr v_table c_table s_table env level e1) with
+					| t -> if t = list_type then Void else raise(Failure("Function Argument Type Mismatch"))
+					| _ -> raise(Failure("Function Argument Type Mismatch"))
 					)
-				|	(Id("remove"), [e1]) ->
+				|	(Id("remove"), [e1]) | (Id("get"), [e1]) ->
 					(
 					match (check_expr v_table c_table s_table env level e1) with
 					| Int -> list_type
+					| _ -> raise(Failure("Function Argument Type Mismatch"))
+					)
+				| (Id("filter"), [e1]) ->
+					(
+					match (check_expr v_table c_table s_table env level e1) with
+					| FuncType(return_type, arg_list) ->
+						(
+						match arg_list with
+						| t::[] ->
+							if t = list_type && Bool = return_type then ListType(list_type) else raise(Failure("Function Argument Type Mismatch"))
+						| _ -> 	raise(Failure("Function Argument Mismatch"))
+						)
+					| _ -> raise(Failure("Function Argument Type Mismatch"))
+					)
+				| (Id("count"), [e1]) ->
+					(
+					match (check_expr v_table c_table s_table env level e1) with
+					| FuncType(return_type, arg_list) ->
+						(
+						match arg_list with
+						| t::[] ->
+							if t = list_type && Bool = return_type then Int else raise(Failure("Function Argument Type Mismatch"))
+						| _ -> 	raise(Failure("Function Argument Mismatch"))
+						)
 					| _ -> raise(Failure("Function Argument Type Mismatch"))
 					)
 				| _ -> raise(Failure("No Such Function"))
@@ -371,22 +490,32 @@ and check_expr v_table c_table s_table env level expr =
 		(
 		match e1 with
 		| Id(id) ->
-			if NameMap.mem id v_table then
-				match NameMap.find id v_table with
-				| (FuncType(type_spec, type_list),_) ->
-					let rec check_param type_list expr_list =
-						 match (type_list, expr_list) with
-						| ([], []) -> type_spec
-						| (t::tail1, e::tail2) -> 
-							if (check_expr v_table c_table s_table env level e) = t then
-								check_param tail1 tail2
-							else
-								raise(Failure("Function Parameter Type Mismatch"))
-						| _ -> raise(Failure("Function Parameter Mismatch"))
-					in check_param type_list expr_list
-				| _ -> raise(Failure(id^" is not an Function"))
+			if id = "run" && env = 0 then
+				match expr_list with
+				| hd::[] -> 
+					(
+					match check_expr v_table c_table s_table env level hd with
+					| ListType(t) -> (match t with | Class(t) -> Void | _ -> raise(Failure("Run Function Error")))
+					| _ -> raise(Failure("Run Function Error"))
+					)
+				| _ -> raise(Failure("Run Function Error"))
 			else
-				raise(Failure("Cannot Find Function "^id))
+  			if NameMap.mem id v_table then
+  				match NameMap.find id v_table with
+  				| (FuncType(type_spec, type_list),_) ->
+  					let rec check_param type_list expr_list =
+  						 match (type_list, expr_list) with
+  						| ([], []) -> type_spec
+  						| (t::tail1, e::tail2) -> 
+  							if (check_expr v_table c_table s_table env level e) = t then
+  								check_param tail1 tail2
+  							else
+  								raise(Failure("Function Parameter Type Mismatch"))
+  						| _ -> raise(Failure("Function Parameter Mismatch"))
+  					in check_param type_list expr_list
+  				| _ -> raise(Failure(id^" is not an Function"))
+  			else
+  				raise(Failure("Cannot Find Function "^id))
 		| _ -> raise(Failure("Function Call Format Error"))
 		)
 	| NoExpr -> Void
@@ -402,10 +531,19 @@ and find_cls_state s_table id id' =
 				if head = id then
 					true
 				else
-					false
+					find_state tail id
 		in find_state (NameMap.find id s_table) id'
 	else
 		raise(Failure("Cannot Find Class "^id))
+
+and find_cls_state2 v_table s_table id id' =
+	if NameMap.mem id v_table then
+		let (c_type, _) = NameMap.find id v_table in
+			match c_type with
+			| Class(c_name) -> find_cls_state s_table c_name id'
+			| _ -> raise(Failure(id^" is not an object"))
+	else
+		raise(Failure("Cannot Find Object "^id))
 
 (*find the member of the object in Class table*)
 
@@ -430,8 +568,8 @@ and find_cls_mem c_table id id' =
 and add_s_c_table v_table c_table s_table id state_list stmt_list level =
 	match add_c_table v_table c_table s_table id stmt_list level with
 	| (v_table', c_table') ->
-		match add_s_table v_table' c_table s_table id state_list level with
-		| (s_table') -> 		
+		match add_s_table v_table' c_table' s_table id state_list level with
+		| (s_table') -> 
   		if check_state v_table' c_table' s_table' id state_list level then 
   			(c_table', s_table')
   		else
@@ -458,13 +596,13 @@ and check_state v_table c_table s_table id state_list level =
 (*add states to the state table*)
 
 and add_s_table v_table c_table s_table id state_list level = 
-	let rec add_state s_table list = 
+	let rec add_state s_table' list = 
 		match list with
 		| [] ->
-			if NameMap.mem id s_table then 
-				s_table
+			if NameMap.mem id s_table' then 
+				s_table'
 			else
-				NameMap.add id [] s_table
+				NameMap.add id [] s_table'
 		| head::tail ->
 			match head with
 			| (s_id, c_stmt) -> 
@@ -472,10 +610,10 @@ and add_s_table v_table c_table s_table id state_list level =
 				| CompStmt(t) ->  
 					add_state 
 					(
-					if NameMap.mem id s_table then
-						NameMap.add id (s_id::(NameMap.find id s_table)) s_table
+					if NameMap.mem id s_table' then
+						NameMap.add id (s_id::(NameMap.find id s_table')) s_table'
 					else
-						NameMap.add id [s_id] s_table
+						NameMap.add id [s_id] s_table'
 					) 
 					tail
 				| _ -> raise (Failure("Need a Compound Stmt")) 

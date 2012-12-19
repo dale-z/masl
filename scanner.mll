@@ -95,8 +95,6 @@ and token_parser = parse
 	| '.'	{ DOT }
 	| '@'	{ AT }
 	| "->"	{ TRANS }
-	(* Identifiers. *)
-	| (letter | '_') (letter | '_' | digit)* as lxm { ID(lxm) }
 	(* Literals (for basic data types). *)
 	| digit+ as lxm	{ INT_LITERAL(int_of_string lxm) }
 	| digit+ ('.' digit*)? (['e' 'E'] ['+' '-']? digit+)
@@ -106,6 +104,8 @@ and token_parser = parse
 	| '\''  escape_sequence_char '\'' as lxm { CHAR_LITERAL(Scanf.sscanf ("\"" ^ lxm ^ "\"") "%S%!" (fun u -> u.[1])) }
 	| "true" | "false" as lxm	{ BOOL_LITERAL(bool_of_string lxm) }
 	| '"' (single_char_string | escape_sequence_string)* '"'	as lxm { STRING_LITERAL(explode (Scanf.sscanf ("\"" ^ (String.sub lxm 1 (String.length lxm - 2)) ^ "\"") "%S%!" (fun u -> u))) }
+		(* Identifiers. *)
+	| (letter | '_') (letter | '_' | digit)* as lxm { ID(lxm) }
 	| _ as lxm { raise (Failure("illegal token" ^ (Char.escaped lxm))); }
 	| eof { EOF }
 	(* TODO Handle EOF and invalid input. *)
