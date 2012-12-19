@@ -27,7 +27,7 @@ CLEAN_OBJS =\
 all: masl
 
 masl : $(MASL_OBJS)
-	ocamlc -o $@ unix.cma $(MASL_OBJS)
+	ocamlc -o $@ unix.cma str.cma $(MASL_OBJS)
 
 scanner.ml: scanner.mll
 	ocamllex scanner.mll
