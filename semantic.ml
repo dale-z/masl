@@ -27,7 +27,7 @@ let rec check_semantic program =
 	["printInt"; "printDouble"; "printChar"; "printBool"; "printStr";"nx";"ny";"cellSize";"interval"; "isUpdated"] 
 	[
 	(FuncType(Void,[Int]), [(0,"")]); (FuncType(Void,[Double]), [(0,"")]); (FuncType(Void,[Char]), [(0,"")]); (FuncType(Void,[Bool]), [(0,"")]); (FuncType(Void,[ListType(Char)]), [(0,"")]);
-	(Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]; (Bool, [(0,"")]))
+	(Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]); (Int, [(0,"")]); (Bool, [(0,"")])
 	] 
 	NameMap.empty, 
 	NameMap.empty, NameMap.empty
