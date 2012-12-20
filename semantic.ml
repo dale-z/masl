@@ -474,6 +474,7 @@ and check_expr v_table c_table s_table env level expr =
 						)
 					| _ -> raise(Failure("Function Argument Type Mismatch"))
 					)
+				| (Id("size"), []) -> Int
 				| _ -> raise(Failure("No Such Function"))
 				)
 			| _ -> raise(Failure("LDot Operation Error"))
