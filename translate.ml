@@ -164,7 +164,7 @@ and translate_expr node =
 	| BinaryOp(expr1, op, expr2) -> (*"(" ^*) 
     begin
       match op with
-      | At -> (translate_expr expr1) ^ ".equals(\"" ^ (translate_expr expr2) ^ "\")"
+      | At -> (translate_expr expr1) ^ ".__curState.equals(\"" ^ (translate_expr expr2) ^ "\")"
       | Trans -> (translate_expr expr1) ^ ".__curState = \"" ^ (translate_expr expr2) ^ "\""
       | Index -> (translate_expr expr1) ^ ".get(" ^ (translate_expr expr2) ^ ")"
 			| LDot -> (translate_expr expr1) ^ "." ^ (
