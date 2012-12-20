@@ -1,0 +1,22 @@
+// 38 // 0;
+int a = 1 + 2 - 3 * 4;
+double b = a;
+bool c = (true && false) || (3 > 2);
+char d = 'a';
+[char] e = [char]{d};
+double f(int a, double b) { return a*b; }
+(int, double):double g = f;
+double h = g(a, b);
+
+printInt(a);
+printChar('\n');
+printDouble(b);
+printChar('\n');
+printBool(c);
+printChar('\n');
+printChar(d);
+printChar('\n');
+printChar(e:[0]);
+printChar('\n');
+printDouble(h);
+printChar('\n');

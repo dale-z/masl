@@ -1,0 +1,11 @@
+int a = 10;
+
+if (true)
+{
+	a = 5;
+	printInt(a);
+	printChar('\n');
+}
+a = 10;
+printInt(a);
+printChar('\n');

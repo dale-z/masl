@@ -1,0 +1,7 @@
+[char] list = [char]{'h', 'e', 'l', 'l', 'o'};
+for(char c : list) {
+	if (c == 'l') {
+		break;
+	}
+	printChar(c);
+}
